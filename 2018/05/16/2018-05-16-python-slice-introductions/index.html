@@ -1,0 +1,712 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|Monaco:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Python," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="对象的切片切片的基本形式在Python中，像列表（list）、元组（tuple）和字符串（str）这类的序列类型都支持切片操作，在切片和区间操作里不包含区间范围的最后一个元素是Python的风格，原因如下：
+
+当只有一个位置信息的时候，可以快速的看出切片和区间里有几个元素：range(3)和my_list[:3]都将返回3个元素
+
+起止位置信息可见的时候，可以快速的计算出切片和区间的长度，用后一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="详解Python中的切片">
+<meta property="og:url" content="http://yoursite.com/2018/05/16/2018-05-16-python-slice-introductions/index.html">
+<meta property="og:site_name" content="于成辉的技术博客">
+<meta property="og:description" content="对象的切片切片的基本形式在Python中，像列表（list）、元组（tuple）和字符串（str）这类的序列类型都支持切片操作，在切片和区间操作里不包含区间范围的最后一个元素是Python的风格，原因如下：
+
+当只有一个位置信息的时候，可以快速的看出切片和区间里有几个元素：range(3)和my_list[:3]都将返回3个元素
+
+起止位置信息可见的时候，可以快速的计算出切片和区间的长度，用后一">
+<meta property="og:updated_time" content="2018-05-16T09:24:14.980Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="详解Python中的切片">
+<meta name="twitter:description" content="对象的切片切片的基本形式在Python中，像列表（list）、元组（tuple）和字符串（str）这类的序列类型都支持切片操作，在切片和区间操作里不包含区间范围的最后一个元素是Python的风格，原因如下：
+
+当只有一个位置信息的时候，可以快速的看出切片和区间里有几个元素：range(3)和my_list[:3]都将返回3个元素
+
+起止位置信息可见的时候，可以快速的计算出切片和区间的长度，用后一">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/05/16/2018-05-16-python-slice-introductions/"/>
+
+
+
+
+
+  <title> 详解Python中的切片 | 于成辉的技术博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">于成辉的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">技术人生</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/16/2018-05-16-python-slice-introductions/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="yuchenghui">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="于成辉的技术博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="于成辉的技术博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                详解Python中的切片
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-16T15:19:55+08:00">
+                2018-05-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/编程语言/" itemprop="url" rel="index">
+                    <span itemprop="name">编程语言</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<h2 id="对象的切片"><a href="#对象的切片" class="headerlink" title="对象的切片"></a><strong>对象的切片</strong></h2><h3 id="切片的基本形式"><a href="#切片的基本形式" class="headerlink" title="切片的基本形式"></a><strong>切片的基本形式</strong></h3><p>在Python中，像列表（list）、元组（tuple）和字符串（str）这类的序列类型都支持切片操作，<strong><em>在切片和区间操作里不包含区间范围的最后一个元素是Python的风格</em></strong>，原因如下：</p>
+<ul>
+<li><p>当只有一个位置信息的时候，可以快速的看出切片和区间里有几个元素：<code>range(3)</code>和<code>my_list[:3]</code>都将返回3个元素</p>
+</li>
+<li><p>起止位置信息可见的时候，可以快速的计算出切片和区间的长度，用后一个数减去第一个下标即可<code>(stop - start)</code>即可</p>
+</li>
+<li><p>可以用任意一个下标把序列分割成不可重叠的部分，只要写成<code>my_list[:3]</code>和<code>my_list[3:]</code>即可</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>my_list = [<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>]</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>my_list[:<span class="number">5</span>]</div><div class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>]</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>my_list[<span class="number">5</span>:]</div><div class="line">[<span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>]</div></pre></td></tr></table></figure>
+<p>切片最常用的形式是：用<code>s[a:b:c]</code>的形式对<code>s</code>在<code>a</code>和<code>b</code>之间以<code>c</code>为间隔取值，当然<code>c</code>的值可以为负值，负值意味着反向取值</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>s = <span class="string">'abcdefghijk'</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[::<span class="number">3</span>]</div><div class="line"><span class="string">'adgj'</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[::<span class="number">-2</span>]</div><div class="line"><span class="string">'kigeca'</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[::<span class="number">-1</span>]</div><div class="line"><span class="string">'kjihgfedcba'</span></div></pre></td></tr></table></figure>
+<h3 id="切片对象"><a href="#切片对象" class="headerlink" title="切片对象"></a><strong>切片对象</strong></h3><p><code>a:b:c</code>这种用法只能作为索引或者下标用在<code>[]</code>中来返回一个<strong>切片对象</strong>：<code>slice(a,b,c)</code>，即可以用下面比较标准的表达方式进行说明。</p>
+<p><code>seq[start:end:step]</code>对应的对象为<code>seq.__getitem__(slice(start,end,step))</code>，这个内置的序列类型也可以用户进行自定义。</p>
+<h3 id="切片的赋值"><a href="#切片的赋值" class="headerlink" title="切片的赋值"></a><strong>切片的赋值</strong></h3><p>如果把切片放在赋值语句的左边，或者把它作为<code>del</code>的操作对象，就可以对序列进行嫁接，切除和修改，需要注意的是：<strong><em>如果赋值的对象是一个切片，那么赋值语句的右侧必须是个可迭代的对象，即便只有单独的一个值，也要把它转换成可迭代的对象</em></strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>l = list(range(<span class="number">10</span>))</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>l</div><div class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>l[<span class="number">2</span>:<span class="number">3</span>] = [<span class="number">222</span>, <span class="number">333</span>]</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>l</div><div class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">222</span>, <span class="number">333</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>l[<span class="number">2</span>:<span class="number">3</span>] = <span class="number">100</span>   </div><div class="line">Traceback (most recent call last):</div><div class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</div><div class="line">TypeError: can only assign an iterable</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>l[<span class="number">2</span>:<span class="number">3</span>] = [<span class="number">100</span>]</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>l</div><div class="line">[<span class="number">0</span>, <span class="number">1</span>, <span class="number">100</span>, <span class="number">333</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">8</span>, <span class="number">9</span>]</div></pre></td></tr></table></figure>
+<p>由于<code>100</code>不是一个可迭代的对象，所以直接给切片赋值的时候会出现报错，换成可迭代对象<code>[100]</code>后就不会再出错。如果在实现类的时候将内置的方法自定义为可迭代的对象后面会有详细的说明。</p>
+<h2 id="切片的原理"><a href="#切片的原理" class="headerlink" title="切片的原理"></a><strong>切片的原理</strong></h2><p>先从一个例子说起：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="class"><span class="keyword">class</span> <span class="title">MySeq</span><span class="params">()</span>:</span></div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__getitem__</span><span class="params">(self, index)</span>:</span></div><div class="line"><span class="meta">... </span>        <span class="keyword">return</span> index</div><div class="line">...</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s = MySeq()</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[<span class="number">1</span>]</div><div class="line"><span class="number">1</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[<span class="number">1</span>:<span class="number">5</span>]</div><div class="line">slice(<span class="number">1</span>, <span class="number">5</span>, <span class="keyword">None</span>)</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[<span class="number">1</span>:<span class="number">5</span>:<span class="number">2</span>]</div><div class="line">slice(<span class="number">1</span>, <span class="number">5</span>, <span class="number">2</span>)</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[<span class="number">1</span>:<span class="number">5</span>:<span class="number">2</span>, <span class="number">9</span>]</div><div class="line">(slice(<span class="number">1</span>, <span class="number">5</span>, <span class="number">2</span>), <span class="number">9</span>)</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>s[<span class="number">1</span>:<span class="number">5</span>:<span class="number">2</span>, <span class="number">4</span>:<span class="number">9</span>]</div><div class="line">(slice(<span class="number">1</span>, <span class="number">5</span>, <span class="number">2</span>), slice(<span class="number">4</span>, <span class="number">9</span>, <span class="keyword">None</span>))</div></pre></td></tr></table></figure>
+<p>在输入<code>s[1:5:2]</code>默认的就会直接调用切片的对象，<code>slice(1, 5, 2)</code>，即从1开始，到5结束，步幅为2，如果<code>[]</code>中有逗号，那么<code>__getitem__</code>得到的是元组，下面来看看<code>slice</code>类的属性。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">&gt;&gt;&gt; slice  </div><div class="line">&lt;class 'slice'&gt;   ##表明slice是内置的类型</div><div class="line">&gt;&gt;&gt; dir(slice)</div><div class="line">['__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'indices', 'start', 'step', 'stop']</div><div class="line">&gt;&gt;&gt;</div><div class="line">&gt;&gt;&gt; help(slice.indices) ## 来看看slice的indices的属性</div><div class="line"></div><div class="line">indices(...)</div><div class="line">    S.indices(len) -&gt; (start, stop, stride)</div><div class="line"></div><div class="line">    Assuming a sequence of length len, calculate the start and stop</div><div class="line">    indices, and the stride length of the extended slice described by</div><div class="line">    S. Out of bounds indices are clipped in a manner consistent with the</div><div class="line">    handling of normal slices.</div></pre></td></tr></table></figure>
+<p>上述方法说明，<code>indices</code>方法可以处理缺失的索引和负值，以及长度超过目标序列的切片，即将<code>start</code>，<code>stop</code>和<code>step</code>都变成非负数，并且都落在指定的长度序列的边界内。</p>
+<h2 id="类的切片"><a href="#类的切片" class="headerlink" title="类的切片"></a><strong>类的切片</strong></h2><p>为了比较好的说明，先编写一个<code>Vector</code>的类，这个类自定义了内置的方法，其中就有关于切片的方法<code>__getitem__</code>。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line"><span class="class"><span class="keyword">class</span> <span class="title">Vector</span>:</span></div><div class="line">    typecode = <span class="string">'d'</span></div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, components)</span>:</span></div><div class="line">        self._components = array(self.typecode, components)</div><div class="line">        </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__iter__</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="keyword">return</span> iter(self._components)</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__repr__</span><span class="params">(self)</span>:</span></div><div class="line">        components = reprlib.repr(self._components)</div><div class="line">        components = components[components.find(<span class="string">'['</span>):<span class="number">-1</span>]</div><div class="line">        <span class="keyword">return</span> <span class="string">'Vector(&#123;&#125;)'</span>.format(components)</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__str__</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="keyword">return</span> str(tuple(self._components))</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__len__</span><span class="params">(self)</span>:</span></div><div class="line">        <span class="keyword">return</span> len(self._components)</div><div class="line">    </div><div class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__getitem__</span><span class="params">(self, index)</span>:</span></div><div class="line">        <span class="keyword">return</span> self._components[index]</div></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1 = Vector([<span class="number">2</span>,<span class="number">4</span>,<span class="number">6</span>,<span class="number">8</span>])</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1</div><div class="line">Vector([<span class="number">2.0</span>, <span class="number">4.0</span>, <span class="number">6.0</span>, <span class="number">8.0</span>])</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>len(v1)</div><div class="line"><span class="number">4</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v2 = Vector(range(<span class="number">9</span>))</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v2[<span class="number">2</span>:<span class="number">7</span>]</div><div class="line">array(<span class="string">'d'</span>, [<span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>, <span class="number">5.0</span>, <span class="number">6.0</span>])</div></pre></td></tr></table></figure>
+<p>从上面的结果可以看出，<code>Vector</code>可以支持切片的操作，但是<code>Vector</code>实例的切片只是数组，如果结果也是<code>Vector</code>实例就比较完美了，下面给出具体的实现方式：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">from</span> array <span class="keyword">import</span> array</div><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> reprlib</div><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> numbers</div><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="keyword">import</span> math</div><div class="line">&gt;&gt;&gt;</div><div class="line"><span class="meta">&gt;&gt;&gt; </span><span class="class"><span class="keyword">class</span> <span class="title">Vector</span>:</span></div><div class="line"><span class="meta">... </span>    typecode = <span class="string">'d'</span></div><div class="line">...</div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span><span class="params">(self, components)</span>:</span></div><div class="line"><span class="meta">... </span>        self._components = array(self.typecode, components)</div><div class="line">...</div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__iter__</span><span class="params">(self)</span>:</span></div><div class="line"><span class="meta">... </span>        <span class="keyword">return</span> iter(self._components)</div><div class="line">...</div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__repr__</span><span class="params">(self)</span>:</span></div><div class="line"><span class="meta">... </span>        components = reprlib.repr(self._components)</div><div class="line"><span class="meta">... </span>        components = components[components.find(<span class="string">'['</span>):<span class="number">-1</span>]</div><div class="line"><span class="meta">... </span>        <span class="keyword">return</span> <span class="string">'Vector(&#123;&#125;)'</span>.format(components)</div><div class="line">...</div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__str__</span><span class="params">(self)</span>:</span></div><div class="line"><span class="meta">... </span>        <span class="keyword">return</span> str(tuple(self._components))</div><div class="line">...</div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__len__</span><span class="params">(self)</span>:</span></div><div class="line"><span class="meta">... </span>        <span class="keyword">return</span> len(self._components)</div><div class="line"></div><div class="line"><span class="meta">... </span>    <span class="comment">#实现类的切片内置函数</span></div><div class="line"><span class="meta">... </span>    <span class="function"><span class="keyword">def</span> <span class="title">__getitem__</span><span class="params">(self, index)</span>:</span></div><div class="line">            <span class="comment"># 获取实例所属的类（即Vector），供后面使用</span></div><div class="line"><span class="meta">... </span>        cls = type(self)</div><div class="line">            <span class="comment"># 如果index参数的值是slice对象</span></div><div class="line"><span class="meta">... </span>        <span class="keyword">if</span> isinstance(index, slice):</div><div class="line">                <span class="comment"># 调用类的构造方法，使用_components数组的切片构建一个新的Vector实例</span></div><div class="line"><span class="meta">... </span>            <span class="keyword">return</span> cls(self._components[index])</div><div class="line">            <span class="comment"># 如果index是int或者是其他的整数类型</span></div><div class="line"><span class="meta">... </span>        <span class="keyword">elif</span> isinstance(index, numbers.Integral):</div><div class="line">                <span class="comment">#就返回_components中相应的元素</span></div><div class="line"><span class="meta">... </span>            <span class="keyword">return</span> self._components[index]</div><div class="line"><span class="meta">... </span>        <span class="keyword">else</span>:</div><div class="line"><span class="meta">... </span>            msg = <span class="string">'&#123;cls.__name__&#125; indices must be integers'</span></div><div class="line"><span class="meta">... </span>            <span class="keyword">raise</span> TypeError(msg.format(cls = cls))</div></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1 = Vector(range(<span class="number">10</span>))</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1</div><div class="line">Vector([<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>, ...])</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1[<span class="number">-1</span>]</div><div class="line"><span class="number">9.0</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1[<span class="number">2</span>:<span class="number">6</span>]</div><div class="line">Vector([<span class="number">2.0</span>, <span class="number">3.0</span>, <span class="number">4.0</span>, <span class="number">5.0</span>])</div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1[<span class="number">6</span>]</div><div class="line"><span class="number">6.0</span></div><div class="line"><span class="meta">&gt;&gt;&gt; </span>v1[<span class="number">1</span>,<span class="number">2</span>]</div><div class="line">Traceback (most recent call last):</div><div class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">1</span>, <span class="keyword">in</span> &lt;module&gt;</div><div class="line">  File <span class="string">"&lt;stdin&gt;"</span>, line <span class="number">29</span>, <span class="keyword">in</span> __getitem__</div><div class="line">TypeError: Vector indices must be integers</div></pre></td></tr></table></figure>
+<p>可以看出对<code>Vector</code>实例进行切片结果还是<code>Vector</code>实例，切片索引创建一个新的<code>Vector</code>实例，长度为1的切片也创建一个<code>Vector</code>实例。</p>
+<p>参考文献：《流畅的Python》<br>[巴西] Luciano Ramalho 著<br>       安道  吴珂 译<br>       中国工信出版集团 人民邮电出版社</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Python/" rel="tag"># Python</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/13/2018-05-13-python-static-class-abstract-methods/" rel="next" title="详解Python中的类方法，静态方法和抽象方法">
+                <i class="fa fa-chevron-left"></i> 详解Python中的类方法，静态方法和抽象方法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/30/2018-05-30-machine-learning-decision-tree/" rel="prev" title="决策树中的ID3、C4.5和CART的对比">
+                决策树中的ID3、C4.5和CART的对比 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="yuchenghui" />
+          <p class="site-author-name" itemprop="name">yuchenghui</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">39</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#对象的切片"><span class="nav-number">1.</span> <span class="nav-text">对象的切片</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#切片的基本形式"><span class="nav-number">1.1.</span> <span class="nav-text">切片的基本形式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#切片对象"><span class="nav-number">1.2.</span> <span class="nav-text">切片对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#切片的赋值"><span class="nav-number">1.3.</span> <span class="nav-text">切片的赋值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#切片的原理"><span class="nav-number">2.</span> <span class="nav-text">切片的原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#类的切片"><span class="nav-number">3.</span> <span class="nav-text">类的切片</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yuchenghui</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

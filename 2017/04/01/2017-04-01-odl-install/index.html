@@ -1,0 +1,727 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|Monaco:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="opendaylight," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="操作系统：CentOS7
+内存：2G
+磁盘容量：50G
+
+基础环境配置odl是基于Java虚拟机的，所以要想安装odl，首先需要配置Java环境，为了后续开发使用odl的方便，由于CentOS上默认安装的是openJDK，为了方便使用java的IDEA配置，避免缺少jar包的问题，需要卸载openjdk，再重新从官网上下载最新版本的jdk，进行安装。
+首先执行命令查看已经安装过的JDK1rpm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenDayLight环境配置和安装使用">
+<meta property="og:url" content="http://yoursite.com/2017/04/01/2017-04-01-odl-install/index.html">
+<meta property="og:site_name" content="于成辉的技术博客">
+<meta property="og:description" content="操作系统：CentOS7
+内存：2G
+磁盘容量：50G
+
+基础环境配置odl是基于Java虚拟机的，所以要想安装odl，首先需要配置Java环境，为了后续开发使用odl的方便，由于CentOS上默认安装的是openJDK，为了方便使用java的IDEA配置，避免缺少jar包的问题，需要卸载openjdk，再重新从官网上下载最新版本的jdk，进行安装。
+首先执行命令查看已经安装过的JDK1rpm">
+<meta property="og:image" content="http://yoursite.com/images/odl-install/1.jpg">
+<meta property="og:image" content="http://yoursite.com/images/odl-install/web.jpg">
+<meta property="og:image" content="http://yoursite.com/images/odl-install/console.jpg">
+<meta property="og:updated_time" content="2017-06-13T14:08:49.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OpenDayLight环境配置和安装使用">
+<meta name="twitter:description" content="操作系统：CentOS7
+内存：2G
+磁盘容量：50G
+
+基础环境配置odl是基于Java虚拟机的，所以要想安装odl，首先需要配置Java环境，为了后续开发使用odl的方便，由于CentOS上默认安装的是openJDK，为了方便使用java的IDEA配置，避免缺少jar包的问题，需要卸载openjdk，再重新从官网上下载最新版本的jdk，进行安装。
+首先执行命令查看已经安装过的JDK1rpm">
+<meta name="twitter:image" content="http://yoursite.com/images/odl-install/1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/04/01/2017-04-01-odl-install/"/>
+
+
+
+
+
+  <title> OpenDayLight环境配置和安装使用 | 于成辉的技术博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">于成辉的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">技术人生</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/01/2017-04-01-odl-install/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="yuchenghui">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="于成辉的技术博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="于成辉的技术博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                OpenDayLight环境配置和安装使用
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2017-04-01T09:12:53+08:00">
+                2017-04-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SDN/" itemprop="url" rel="index">
+                    <span itemprop="name">SDN</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<ul>
+<li>操作系统：CentOS7</li>
+<li>内存：2G</li>
+<li>磁盘容量：50G</li>
+</ul>
+<h2 id="基础环境配置"><a href="#基础环境配置" class="headerlink" title="基础环境配置"></a><strong>基础环境配置</strong></h2><p>odl是基于Java虚拟机的，所以要想安装odl，首先需要配置Java环境，为了后续开发使用odl的方便，由于CentOS上默认安装的是openJDK，为了方便使用java的IDEA配置，避免缺少jar包的问题，需要卸载openjdk，再重新从官网上下载最新版本的jdk，进行安装。</p>
+<h3 id="首先执行命令查看已经安装过的JDK"><a href="#首先执行命令查看已经安装过的JDK" class="headerlink" title="首先执行命令查看已经安装过的JDK"></a><strong>首先执行命令查看已经安装过的JDK</strong></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rpm -qa | grep java</div></pre></td></tr></table></figure>
+<p>安装jdk后的目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">java</div><div class="line">java-1.7.0</div><div class="line">java-1.7.0-openjdk.x86_64</div><div class="line">java-1.7.0-openjdk-1.7.0.55.x86_64</div><div class="line">java-openjdk</div><div class="line">jre</div><div class="line">jre-1.7.0</div><div class="line">jre-1.7.0-openjdk.x86_64</div><div class="line">jre-openjdk</div></pre></td></tr></table></figure></p>
+<h3 id="卸载jdk"><a href="#卸载jdk" class="headerlink" title="卸载jdk"></a><strong>卸载jdk</strong></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">yum -y remove java java-1.7.0-openjdk-devel.x86_64</div><div class="line">yum -y remove java java-1.8.0-openjdk-devel.x86_64</div></pre></td></tr></table></figure>
+<h3 id="安装OracleJDK"><a href="#安装OracleJDK" class="headerlink" title="安装OracleJDK"></a><strong>安装OracleJDK</strong></h3><p>从<a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank" rel="external">官网</a>上下载最新版的jdk的rpm包，进行安装<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">rpm -ivh jdk-7u60-linux-x64.rpm</div></pre></td></tr></table></figure></p>
+<blockquote>
+<p>注意：OracleJDK默认安装路径为 /usr/java/</p>
+</blockquote>
+<h3 id="配置Java环境变量"><a href="#配置Java环境变量" class="headerlink" title="配置Java环境变量"></a><strong>配置Java环境变量</strong></h3><p>方法一：只对当前用户有效（建议使用）</p>
+<p>vim ~/.bashrc  添加下面内容<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">JAVA_HOME=/usr/java/jdk1.8.0_92</div><div class="line">CLASSPATH=.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib</div><div class="line">JRE_HOME=/usr/java/jdk1.8.0_92/jre</div><div class="line">PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin</div><div class="line">#  CLASSPATH=:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib</div><div class="line">export JAVA_HOME JRE_HOME PATH CLASSPATH</div></pre></td></tr></table></figure></p>
+<p>保存后重新启动，使之有效<br>执行命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">echo $JAVA_HOME</div><div class="line">java -version</div></pre></td></tr></table></figure></p>
+<p>方法二：对所有用户有效（谨慎使用）<br>需要在root用户下执行</p>
+<p>vi  /etc/profile<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">JAVA_HOME=/usr/java/jdk1.8.0_92</div><div class="line">CLASSPATH=.:$JAVA_HOME/lib:$JAVA_HOME/jre/lib</div><div class="line">JRE_HOME=/usr/java/jdk1.8.0_92/jre</div><div class="line">PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin</div><div class="line">#  CLASSPATH=:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib</div><div class="line">export JAVA_HOME JRE_HOME PATH CLASSPATH</div></pre></td></tr></table></figure></p>
+<p>保存后，重新启动<br>安装完毕</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a><strong>安装</strong></h2><h3 id="下载安装包"><a href="#下载安装包" class="headerlink" title="下载安装包"></a><strong>下载安装包</strong></h3><p>opendaylight安装过程比较简单，先从<a href="https://www.opendaylight.org/downloads" target="_blank" rel="external">官网</a>上下载最新版本的安装包，这里下载的是Boron-SR2版本，下载完成后，进行解压：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">tar -zxvf distribution-karaf-0.5.2-Boron-SR2.tar.gz</div><div class="line">cd distribution-karaf-0.5.2-Boron-SR2</div></pre></td></tr></table></figure>
+<p>运行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">./bin/karaf</div></pre></td></tr></table></figure>
+<img src="/images/odl-install/1.jpg">
+<h3 id="安装组件"><a href="#安装组件" class="headerlink" title="安装组件"></a><strong>安装组件</strong></h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">opendaylight-user@root&gt;feature:install odl-restconf odl-l2switch-switch odl-openflowplugin-all odl-mdsal-apidocs odl-dlux-all</div></pre></td></tr></table></figure>
+<blockquote>
+<p><em>注意</em>：需要安装组件的顺序进行安装，否则可能出现web界面无法访问的问题，无法登陆进入odl界面。<br><em>解决方法</em>：通过logout退出karaf平台，进入上级目录，删除data目录：rm –r data，进入bin目录：cd bin，执行./karaf clean，再次重复上面的安装组件操作。</p>
+</blockquote>
+<h2 id="界面登陆"><a href="#界面登陆" class="headerlink" title="界面登陆"></a><strong>界面登陆</strong></h2><h3 id="web界面"><a href="#web界面" class="headerlink" title="web界面"></a><strong>web界面</strong></h3><p>安装成功上述组件后就可以正常登陆web界面了，直接登陆：<a href="http://[HOST_IP]:8181/index.html" target="_blank" rel="external">http://[HOST_IP]:8181/index.html</a><br>用户名：admin<br>密码：admin</p>
+<p>就可以正常访问了web界面了。</p>
+<img src="/images/odl-install/web.jpg">
+<h3 id="web控制台界面"><a href="#web控制台界面" class="headerlink" title="web控制台界面"></a><strong>web控制台界面</strong></h3><p>要想登陆odl的web界面，需要安装下面的组件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">opendaylight-user@root&gt;feature:install webconsole</div></pre></td></tr></table></figure>
+<p>然后登陆：<a href="http://[HOST_IP]:8181/system/console" target="_blank" rel="external">http://[HOST_IP]:8181/system/console</a><br>用户名：karaf<br>密码：karaf</p>
+<img src="/images/odl-install/console.jpg">
+<h3 id="API查看器"><a href="#API查看器" class="headerlink" title="API查看器"></a><strong>API查看器</strong></h3><p>为了方便查看odl的各种各样的RESTful API，odl还提供了API的查看界面，需要安装以下组件进行登陆。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">opendaylight-user@root&gt;feature:install odl-mdsal-apidocs</div></pre></td></tr></table></figure>
+<p>然后登陆：<a href="http://[HOST_IP]:8181/apidoc/explorer/index.html" target="_blank" rel="external">http://[HOST_IP]:8181/apidoc/explorer/index.html</a><br>用户名：karaf<br>密码：karaf</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/opendaylight/" rel="tag"># opendaylight</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/13/2017-03-13-deeplearning-tensorflow-google-paper-introduction/" rel="next" title="TensorFlow原理和实现框架简介">
+                <i class="fa fa-chevron-left"></i> TensorFlow原理和实现框架简介
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/06/13/2017-06-13-neutron-mtu/" rel="prev" title="neutron中的MTU原理详解以及trouble shooting">
+                neutron中的MTU原理详解以及trouble shooting <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="yuchenghui" />
+          <p class="site-author-name" itemprop="name">yuchenghui</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">39</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#基础环境配置"><span class="nav-number">1.</span> <span class="nav-text">基础环境配置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#首先执行命令查看已经安装过的JDK"><span class="nav-number">1.1.</span> <span class="nav-text">首先执行命令查看已经安装过的JDK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#卸载jdk"><span class="nav-number">1.2.</span> <span class="nav-text">卸载jdk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装OracleJDK"><span class="nav-number">1.3.</span> <span class="nav-text">安装OracleJDK</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#配置Java环境变量"><span class="nav-number">1.4.</span> <span class="nav-text">配置Java环境变量</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装"><span class="nav-number">2.</span> <span class="nav-text">安装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#下载安装包"><span class="nav-number">2.1.</span> <span class="nav-text">下载安装包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装组件"><span class="nav-number">2.2.</span> <span class="nav-text">安装组件</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#界面登陆"><span class="nav-number">3.</span> <span class="nav-text">界面登陆</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#web界面"><span class="nav-number">3.1.</span> <span class="nav-text">web界面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#web控制台界面"><span class="nav-number">3.2.</span> <span class="nav-text">web控制台界面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#API查看器"><span class="nav-number">3.3.</span> <span class="nav-text">API查看器</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yuchenghui</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

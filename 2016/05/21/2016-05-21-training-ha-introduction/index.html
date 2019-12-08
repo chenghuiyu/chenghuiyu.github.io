@@ -1,0 +1,727 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|Monaco:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="HA(High Availability)的定义可用性提供在本地系统的单个组件故障情况下，能够继续访问应用的能力，最好的可用性就是，如果一台机器宕机了，使用服务的用户完全感觉不到
+故障恢复如果出现宕机，在该机器上运行的服务肯定得做故障切换(failover)，切换主要分为两个维度：
+
+RTO(Recovery Time Objective):主要是指服务恢复的时间
+RPO(Recovery Po">
+<meta property="og:type" content="article">
+<meta property="og:title" content="US专题(二)-HA技术介绍">
+<meta property="og:url" content="http://yoursite.com/2016/05/21/2016-05-21-training-ha-introduction/index.html">
+<meta property="og:site_name" content="于成辉的技术博客">
+<meta property="og:description" content="HA(High Availability)的定义可用性提供在本地系统的单个组件故障情况下，能够继续访问应用的能力，最好的可用性就是，如果一台机器宕机了，使用服务的用户完全感觉不到
+故障恢复如果出现宕机，在该机器上运行的服务肯定得做故障切换(failover)，切换主要分为两个维度：
+
+RTO(Recovery Time Objective):主要是指服务恢复的时间
+RPO(Recovery Po">
+<meta property="og:updated_time" content="2016-11-26T01:49:46.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="US专题(二)-HA技术介绍">
+<meta name="twitter:description" content="HA(High Availability)的定义可用性提供在本地系统的单个组件故障情况下，能够继续访问应用的能力，最好的可用性就是，如果一台机器宕机了，使用服务的用户完全感觉不到
+故障恢复如果出现宕机，在该机器上运行的服务肯定得做故障切换(failover)，切换主要分为两个维度：
+
+RTO(Recovery Time Objective):主要是指服务恢复的时间
+RPO(Recovery Po">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/05/21/2016-05-21-training-ha-introduction/"/>
+
+
+
+
+
+  <title> US专题(二)-HA技术介绍 | 于成辉的技术博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">于成辉的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">技术人生</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/21/2016-05-21-training-ha-introduction/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="yuchenghui">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="于成辉的技术博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="于成辉的技术博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                US专题(二)-HA技术介绍
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-05-21T16:19:10+08:00">
+                2016-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<h2 id="HA-High-Availability-的定义"><a href="#HA-High-Availability-的定义" class="headerlink" title="HA(High Availability)的定义"></a><strong>HA(High Availability)的定义</strong></h2><h4 id="可用性"><a href="#可用性" class="headerlink" title="可用性"></a><strong>可用性</strong></h4><p>提供在本地系统的单个组件故障情况下，能够继续访问应用的能力，最好的可用性就是，如果一台机器宕机了，使用服务的用户完全感觉不到</p>
+<h4 id="故障恢复"><a href="#故障恢复" class="headerlink" title="故障恢复"></a><strong>故障恢复</strong></h4><p>如果出现宕机，在该机器上运行的服务肯定得做故障切换(failover)，切换主要分为两个维度：</p>
+<ul>
+<li>RTO(Recovery Time Objective):主要是指服务恢复的时间</li>
+<li>RPO(Recovery Point Objective)：主要是指切换时向前恢复的数据的时间长度，RPO=1天意味着恢复时使用一天前的数据，那么一天之内的数据就丢失了。</li>
+</ul>
+<h5 id="补充概念"><a href="#补充概念" class="headerlink" title="补充概念"></a><em>补充概念</em></h5><ul>
+<li>Active/Passive:主要包括一台活动提供服务的服务器和一台待命不对外提供服务的服务器，一般在讲failover就是属于这个，也是cluster HA基本款。</li>
+<li>Active/Active:两台（或N台）同时运作，每台机器可以跑一个运行的实例，当一台机器出现宕机时，就会将运行的实例切换到另外一台机器上去，那么另外一台机器就会运行两个实例，AA模式保证了两台机器资源都被利用。</li>
+</ul>
+<h2 id="HA-High-Availability-的实现"><a href="#HA-High-Availability-的实现" class="headerlink" title="HA(High Availability)的实现"></a><strong>HA(High Availability)的实现</strong></h2><h3 id="（一）冗余"><a href="#（一）冗余" class="headerlink" title="（一）冗余"></a><strong>（一）冗余</strong></h3><h4 id="硬件"><a href="#硬件" class="headerlink" title="硬件"></a><strong>硬件</strong></h4><ul>
+<li>电源：采用双路供电</li>
+<li><p>磁盘：可以分为RAID0、RAID1、RAID5等</p>
+<ul>
+<li><strong>RAID0:</strong>又称为stripe或者striping，代表了RAID级别中最高的存储性能，原理就是把连续的数据分散到多个磁盘上进行存取，这样，系统有数据请求就可以被多个磁盘并行的执行，每个磁盘执行属于它自己的那部分数据请求，这样可以充分利用总线的带宽。</li>
+<li><strong>RAID1:</strong>通过磁盘数据镜像实现数据冗余，在成对的独立磁盘上产生互为备份的数据，当原始数据繁忙时，可直接从镜像拷贝中读取数据，这样就提高了读取性能，并保证了数据的可靠性和安全性。当一个磁盘失效时，系统就可以自动切换到镜像磁盘上读写。</li>
+<li>RAID5:可以理解为RAID0和RAID1的折中方案，可以为系统提供数据安全保障，但保障程度要比mirror低，而磁盘空间利用率要比mirror高。</li>
+<li>RAID10:主要是一个RAID0和RAID1的结合，利用奇偶校验实现条带集镜像，继承了RAID0的快速和RAID1的安全</li>
+</ul>
+</li>
+<li><p>网卡：（bonding，双路）在linux服务器上可以利用bonding技术，将多个网卡当做一个网卡使用，不仅提高了带宽而且提高了可用性。</p>
+</li>
+<li><p>交换机：LACP、VRRP</p>
+</li>
+</ul>
+<blockquote>
+<ul>
+<li><p><em>LACP(Link Aggregration Control Protocol，链路汇聚控制协议)：</em>是一种实现链路动态汇聚的协议，LACP协议通过<em>LACPDU（LACP Data Unit，链路汇聚控制协议数据单元）</em>与对端交互信息。当启用某一端口的LACP协议后，该端口将发送LACPDU向对端通告自己的系统优先级，系统MAC地址，端口优先级，端口号和操作Key。对端接受到这些信息后，将这些信息与其他端口所保存的信息比较以选择能够汇聚的端口，从而双发可以对端口加入或退出某个动态汇聚组达成一致。</p>
+</li>
+<li><p><em>虚拟路由冗余协议(Virtual Router Redundancy Protocol，简称VRRP)</em>是由IETF提出的解决局域网中配置静态网关出现单点失效现象的路由协议，VRRP广泛应用在边缘网络中，它的设计目标是支持特定情况下IP数据流量失败转移不会引起混乱，允许主机使用单路由器，以及及时在实际第一跳路由器使用失败的情形下仍能够维护路由器间的连通性。</p>
+</li>
+</ul>
+</blockquote>
+<h4 id="软件"><a href="#软件" class="headerlink" title="软件"></a><strong>软件</strong></h4><ul>
+<li>协议:HTTP、广播</li>
+<li>负载均衡：LVS、haproxy、nginx</li>
+</ul>
+<blockquote>
+<p><strong><em>LVS</em></strong> 采用IP负载均衡技术和基于内容请求分发技术。调度器具有很好的吞吐率，将请求均衡地转移到不同的服务器上执行，且调度器自动屏蔽掉服务器的故障，从而将一组服务器构成一个高性能的、高可用的虚拟服务器。整个服务器集群的结构对客户是透明的，而且无需修改客户端和服务器端的程序。为此，在设计时需要考虑系统的透明性、可伸缩性、高可用性和易管理性。</p>
+<p><strong><em>Nginx</em></strong> 是一款轻量级的Web 服务器/反向代理服务器及电子邮件（IMAP/POP3）代理服务器，并在一个BSD-like 协议下发行。其特点是占有内存少，并发能力强，事实上nginx的并发能力确实在同类型的网页服务器中表现较好。</p>
+<p><strong><em>HAProxy</em></strong> 提供高可用性、负载均衡以及基于TCP和HTTP应用的代理，支持虚拟主机，它是免费、快速并且可靠的一种解决方案。HAProxy特别适用于那些负载特大的web站点，这些站点通常又需要会话保持或七层处理。</p>
+</blockquote>
+<ul>
+<li>集群:主主、主备；同步，异步</li>
+</ul>
+<h3 id="（二）校验"><a href="#（二）校验" class="headerlink" title="（二）校验"></a><strong>（二）校验</strong></h3><ul>
+<li>checksum(TCP校验和)：是一个端到端的校验和，由发送端计算，然后由接收端验证。</li>
+<li>CRC（Cyclic redundancy check循环冗余校验）：主要用来检验数据传输和保存后可能出现的错误，生成的数字在传输的过程或者存储之前计算出来并且附加到数据的后面。</li>
+<li>重传</li>
+</ul>
+<h3 id="（三）综合"><a href="#（三）综合" class="headerlink" title="（三）综合"></a><strong>（三）综合</strong></h3><ul>
+<li>校验+冗余</li>
+</ul>
+<h3 id="（四）Failover"><a href="#（四）Failover" class="headerlink" title="（四）Failover"></a><strong>（四）Failover</strong></h3><blockquote>
+<p> 又称故障切换，指系统中其中一项设备或服务失效而无法运作时，另一项设备或服务即可自动接手原失效系统所执行的工作。</p>
+</blockquote>
+<p><em>为了实现自动的故障切换，通常需要在冗余的组件之间启用心跳机制，以相互检测彼此的状态，在检测到故障时自动进行切换</em></p>
+<ul>
+<li>监控</li>
+<li>切换</li>
+</ul>
+<h3 id="（五）相关软件"><a href="#（五）相关软件" class="headerlink" title="（五）相关软件"></a><strong>（五）相关软件</strong></h3><ul>
+<li>keepalived</li>
+<li>pacemaker</li>
+<li>heartbeat + DRBD(AP实现方式)</li>
+</ul>
+<blockquote>
+<p>DRBD(Distributed Replicated Block Device)是一个用软件实现的、无共享的、服务器之间镜像块设备内容的存储复制解决方案。号称“网络RAID”。通过网络通信来同步镜像整个设备，当数据写入本地的DRBD设备上的文件系统时，数据会同时被发送到网络中的另外一台主机之上，并以完全相同的形式记录在一个文件系统中。本地节点（主机）与远程节点（主机）的数据可以保证实时的同步，并保证IO的一致性。</p>
+</blockquote>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/18/2016-05-18-training-rabbitmq/" rel="next" title="US专题(一)-RabbitMQ">
+                <i class="fa fa-chevron-left"></i> US专题(一)-RabbitMQ
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/05/21/2016-05-21-training-ha-openstack/" rel="prev" title="training-ha-openstack">
+                training-ha-openstack <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="yuchenghui" />
+          <p class="site-author-name" itemprop="name">yuchenghui</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">39</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#HA-High-Availability-的定义"><span class="nav-number">1.</span> <span class="nav-text">HA(High Availability)的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#可用性"><span class="nav-number">1.0.1.</span> <span class="nav-text">可用性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#故障恢复"><span class="nav-number">1.0.2.</span> <span class="nav-text">故障恢复</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#补充概念"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">补充概念</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HA-High-Availability-的实现"><span class="nav-number">2.</span> <span class="nav-text">HA(High Availability)的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#（一）冗余"><span class="nav-number">2.1.</span> <span class="nav-text">（一）冗余</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#硬件"><span class="nav-number">2.1.1.</span> <span class="nav-text">硬件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#软件"><span class="nav-number">2.1.2.</span> <span class="nav-text">软件</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（二）校验"><span class="nav-number">2.2.</span> <span class="nav-text">（二）校验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（三）综合"><span class="nav-number">2.3.</span> <span class="nav-text">（三）综合</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（四）Failover"><span class="nav-number">2.4.</span> <span class="nav-text">（四）Failover</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#（五）相关软件"><span class="nav-number">2.5.</span> <span class="nav-text">（五）相关软件</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yuchenghui</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

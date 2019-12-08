@@ -1,0 +1,843 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|Monaco:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="neutron," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="本部分主要讨论vm的南北流量和东西流量之间的数据包转发机制，原理上使用neutron的ml2 plugin的实现方法，属于纯neutron方案。
+（1）南北流向：主要是指vm（Project network）和外面网络（external network）之间的数据包流向，这里存在两种不同的情况：
+
+vm利用fixed IP地址向外网发送数据包；
+外界通过floating IP向内部虚拟机发送网络">
+<meta property="og:type" content="article">
+<meta property="og:title" content="neutron南北、东西流量网络实现原理">
+<meta property="og:url" content="http://yoursite.com/2016/07/11/2016-07-11-understanding-neutron-north-south-east-west/index.html">
+<meta property="og:site_name" content="于成辉的技术博客">
+<meta property="og:description" content="本部分主要讨论vm的南北流量和东西流量之间的数据包转发机制，原理上使用neutron的ml2 plugin的实现方法，属于纯neutron方案。
+（1）南北流向：主要是指vm（Project network）和外面网络（external network）之间的数据包流向，这里存在两种不同的情况：
+
+vm利用fixed IP地址向外网发送数据包；
+外界通过floating IP向内部虚拟机发送网络">
+<meta property="og:image" content="http://yoursite.com/images/understanding-neutron1/understanding_neutron_inter_to_external.PNG">
+<meta property="og:image" content="http://yoursite.com/images/understanding-neutron1/understanding_neutron_external_to_inter.PNG">
+<meta property="og:image" content="http://yoursite.com/images/understanding-neutron1/understanding_neutron_same_subnet.PNG">
+<meta property="og:image" content="http://yoursite.com/images/understanding-neutron1/understanding_neutron_different_subnet.PNG">
+<meta property="og:updated_time" content="2018-06-04T03:40:05.564Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="neutron南北、东西流量网络实现原理">
+<meta name="twitter:description" content="本部分主要讨论vm的南北流量和东西流量之间的数据包转发机制，原理上使用neutron的ml2 plugin的实现方法，属于纯neutron方案。
+（1）南北流向：主要是指vm（Project network）和外面网络（external network）之间的数据包流向，这里存在两种不同的情况：
+
+vm利用fixed IP地址向外网发送数据包；
+外界通过floating IP向内部虚拟机发送网络">
+<meta name="twitter:image" content="http://yoursite.com/images/understanding-neutron1/understanding_neutron_inter_to_external.PNG">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2016/07/11/2016-07-11-understanding-neutron-north-south-east-west/"/>
+
+
+
+
+
+  <title> neutron南北、东西流量网络实现原理 | 于成辉的技术博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">于成辉的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">技术人生</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/07/11/2016-07-11-understanding-neutron-north-south-east-west/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="yuchenghui">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="于成辉的技术博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="于成辉的技术博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                neutron南北、东西流量网络实现原理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2016-07-11T22:48:58+08:00">
+                2016-07-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/云计算/" itemprop="url" rel="index">
+                    <span itemprop="name">云计算</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<p>本部分主要讨论vm的南北流量和东西流量之间的数据包转发机制，原理上使用neutron的ml2 plugin的实现方法，属于纯neutron方案。</p>
+<p>（1）南北流向：主要是指vm（Project network）和外面网络（external network）之间的数据包流向，这里存在两种不同的情况：</p>
+<ul>
+<li>vm利用fixed IP地址向外网发送数据包；</li>
+<li>外界通过floating IP向内部虚拟机发送网络数据包</li>
+</ul>
+<p>（2）东西流向：主要是vm之间的网络数据包的流向和转发，也存在两种不同的情况：</p>
+<ul>
+<li>在同一个子网中的不同虚机之间进行网络包的传输和转发</li>
+<li>在不同子网中的不同虚机之间进行网络包的传输和转发</li>
+</ul>
+<h1 id="南北流量实现机制"><a href="#南北流量实现机制" class="headerlink" title="南北流量实现机制"></a>南北流量实现机制</h1><h2 id="Project-network向External-network发送网络包"><a href="#Project-network向External-network发送网络包" class="headerlink" title="Project network向External network发送网络包"></a><strong>Project network向External network发送网络包</strong></h2><p>在多机环境下，在compute node上创建虚机后会分配一个fixed IP来进行通信，以172.21.11.42上的host01为例，对Project network向External network的网络流量进行分析。</p>
+<h3 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a><strong>环境准备</strong></h3><ul>
+<li><p>External network</p>
+<ul>
+<li>Network：172.21.11.0/24</li>
+<li>Project network 路由外部网关：172.21.11.234</li>
+</ul>
+</li>
+<li><p>Project network</p>
+<ul>
+<li>Network: 10.0.1.0/24</li>
+<li>Gateway :10.0.1.1</li>
+</ul>
+</li>
+<li><p>Compute node （host01）</p>
+<ul>
+<li>IP address：10.0.1.3</li>
+</ul>
+</li>
+</ul>
+<h3 id="过程分析"><a href="#过程分析" class="headerlink" title="过程分析"></a><strong>过程分析</strong></h3><h4 id="计算节点的网络包转发过程"><a href="#计算节点的网络包转发过程" class="headerlink" title="计算节点的网络包转发过程"></a><strong><em>计算节点的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，创建的虚拟机host01将数据包通过tap设备发送给Linux Bridge，该数据包包含着Project network的目的MAC地址10.0.1.1;</li>
+<li>（2）接着，Linux Bridge根据安全组规则对数据包进行处理，如果符合规则就通过端口qvb发送给OVS的网桥br-int的端口qvo;</li>
+<li>（3）然后，br-int在qvo端口处对数据包添加相应的vlan tag，并将带有vlan tag的数据包发送给br-tun网桥;</li>
+<li>（4）最后，br-tun网桥收到带有vlan tag的数据包后，按照流表规则，将vlan tag匹配的数据包去掉tag，添加对应的vxlan tunnel号，通过接口发送到VXLAN隧道中去.</li>
+</ul>
+<h4 id="网络节点的网络包转发过程"><a href="#网络节点的网络包转发过程" class="headerlink" title="网络节点的网络包转发过程"></a><strong><em>网络节点的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，网络节点的OVS网桥br-tun收到计算节点发过来的带有vxlan tunnel号的网络包，按照流表规则进行处理，遇到vxlan tunnel号匹配的网络包就会剥掉vxlan tunnel号，并添加对应的vlan tag，发送给br-int；</li>
+<li>（2）接着，br-int收到带有vlan tag的数据包后，通过端口qr发送给路由器的qr端口，路由器的qr端口存放着该project network的网关IP地址（10.0.1.1）；</li>
+<li>（3）然后，在路由服务的namespace中，由于路由器的qg端口存放着project network路由器接口地址（172.21.11.234），就可以利用iptables将该地址作为源地址，进行SNAT转换；</li>
+<li>（4）最后，路由器namespace将SNAT转换后的数据包通过qg端口发送给br-int网桥，br-int网桥再转发给br-ex网桥，br-ex通过外部网卡将数据包发送给外部的网络，这样数据包就从虚拟机发送到外部的网络中去了。</li>
+</ul>
+<p>通过namespace查看路由服务内的信息如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[root@host41 ~]# ip netns exec qrouter-ec5e63fc-c5a4-4925-9767-154583432d21 ip route</div><div class="line">default via 172.21.11.1 dev qg-4306bf11-af </div><div class="line">10.0.1.0/24 dev qr-4d5301c0-7c  proto kernel  scope link  src 10.0.1.1 </div><div class="line">10.1.0.0/24 dev qr-c4a064a6-c5  proto kernel  scope link  src 10.1.0.1 </div><div class="line">172.21.11.0/24 dev qg-4306bf11-af  proto kernel  scope link  src 172.21.11.234 </div><div class="line">192.168.0.0/24 dev qr-622bfadb-9b  proto kernel  scope link  src 192.168.0.1</div></pre></td></tr></table></figure>
+<img src="/images/understanding-neutron1/understanding_neutron_inter_to_external.PNG">
+<h2 id="External-network向Project-network发送网络包"><a href="#External-network向Project-network发送网络包" class="headerlink" title="External network向Project network发送网络包"></a><strong>External network向Project network发送网络包</strong></h2><p>在多机环境下，如果External network能够连接到内部的虚拟机，那么需要给虚拟机分配一个floating ip，还是以创建的虚机host01为例，给它分配一个floating ip（172.21.11.209），现在分析具体的流量转发实现。</p>
+<h3 id="环境准备-1"><a href="#环境准备-1" class="headerlink" title="环境准备"></a><strong>环境准备</strong></h3><ul>
+<li><p>External network</p>
+<ul>
+<li>Network：172.21.11.0/24</li>
+<li>Project network 路由外部网关：172.21.11.234</li>
+</ul>
+</li>
+<li><p>Project network</p>
+<ul>
+<li>Network: 10.0.1.0/24</li>
+<li>Gateway :10.0.1.1</li>
+</ul>
+</li>
+<li><p>Compute node （host01）</p>
+<ul>
+<li>IP address：10.0.1.3</li>
+<li>floating IP：172.21.11.209</li>
+</ul>
+</li>
+</ul>
+<h3 id="过程分析-1"><a href="#过程分析-1" class="headerlink" title="过程分析"></a><strong>过程分析</strong></h3><h4 id="network-node的网络包转发过程"><a href="#network-node的网络包转发过程" class="headerlink" title="network node的网络包转发过程"></a><strong><em>network node的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，外部external network发送网络包到OVS的网桥br-ex，接着br-ex会将该网络包发送给br-int进行处理；</li>
+<li>（2）接着，br-int将网络包通过qg接口送给路由服务qrouter，在路由namespace中的qg端口上<br>包含有host01的floating IP（172.21.11.209），在qr端口上包含有路由的外部网关地址（172.21.11.234）。在qrouter中，iptables services会将qr端口中的网关地址（172.21.11.234）作为源地址进行DNAT转换；</li>
+<li>（3）然后，qrouter将网络包发送给br-int，br-int将网络包添加vlan tag发送给br-tun；</li>
+<li>（4）最后，br-tun根据流表规则剥掉匹配的网络包的vlan tag，添加相应的vxlan tunnel号，扔到vxlan隧道中去。</li>
+</ul>
+<h4 id="compute-node的网络包转发过程"><a href="#compute-node的网络包转发过程" class="headerlink" title="compute node的网络包转发过程"></a><strong><em>compute node的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，计算节点上的br-tun接受vxlan隧道中的带有vxlan tunnel号的网络包，根据流表剥掉匹配的vxlan tunnel号，并添加对应的vlan tag，发送给br-int；</li>
+<li>（2）接着，br-int将数据包发送给Linux bridge进行处理；</li>
+<li>（3）然后，Linux Bridge根据安全组规则对数据包进行处理；</li>
+<li>（4）最后，linux bridge将处理后的数据包通过tap设备发送给虚机host01。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div></pre></td><td class="code"><pre><div class="line">[root@host41 ~]# ip netns exec qrouter-ec5e63fc-c5a4-4925-9767-154583432d21 iptables -t nat -S </div><div class="line">-P PREROUTING ACCEPT</div><div class="line">-P INPUT ACCEPT</div><div class="line">-P OUTPUT ACCEPT</div><div class="line">-P POSTROUTING ACCEPT</div><div class="line">-N neutron-l3-agent-OUTPUT</div><div class="line">-N neutron-l3-agent-POSTROUTING</div><div class="line">-N neutron-l3-agent-PREROUTING</div><div class="line">-N neutron-l3-agent-float-snat</div><div class="line">-N neutron-l3-agent-snat</div><div class="line">-N neutron-postrouting-bottom</div><div class="line">-N neutron-vpn-agen-OUTPUT</div><div class="line">-N neutron-vpn-agen-POSTROUTING</div><div class="line">-N neutron-vpn-agen-PREROUTING</div><div class="line">-N neutron-vpn-agen-float-snat</div><div class="line">-N neutron-vpn-agen-snat</div><div class="line">-A PREROUTING -j neutron-vpn-agen-PREROUTING</div><div class="line">-A PREROUTING -j neutron-l3-agent-PREROUTING</div><div class="line">-A OUTPUT -j neutron-vpn-agen-OUTPUT</div><div class="line">-A OUTPUT -j neutron-l3-agent-OUTPUT</div><div class="line">-A POSTROUTING -j neutron-vpn-agen-POSTROUTING</div><div class="line">-A POSTROUTING -j neutron-postrouting-bottom</div><div class="line">-A POSTROUTING -j neutron-l3-agent-POSTROUTING</div><div class="line">-A neutron-l3-agent-OUTPUT -d 172.21.11.209/32 -j DNAT --to-destination 10.0.1.3</div><div class="line">-A neutron-l3-agent-POSTROUTING ! -i qg-4306bf11-af ! -o qg-4306bf11-af -m conntrack ! --ctstate DNAT -j ACCEPT</div><div class="line">-A neutron-l3-agent-PREROUTING -d 169.254.169.254/32 -i qr-+ -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 9697</div><div class="line">-A neutron-l3-agent-PREROUTING -d 172.21.11.209/32 -j DNAT --to-destination 10.0.1.3</div><div class="line">-A neutron-l3-agent-float-snat -s 10.0.1.3/32 -j SNAT --to-source 172.21.11.209</div><div class="line">-A neutron-l3-agent-snat -j neutron-l3-agent-float-snat</div><div class="line">-A neutron-l3-agent-snat -o qg-4306bf11-af -j SNAT --to-source 172.21.11.234</div><div class="line">-A neutron-l3-agent-snat -m mark ! --mark 0x2/0xffff -m conntrack --ctstate DNAT -j SNAT --to-source 172.21.11.234</div></pre></td></tr></table></figure>
+<img src="/images/understanding-neutron1/understanding_neutron_external_to_inter.PNG">
+<h1 id="东西流量实现机制"><a href="#东西流量实现机制" class="headerlink" title="东西流量实现机制"></a>东西流量实现机制</h1><h2 id="同一子网中的不同虚机转发网络包"><a href="#同一子网中的不同虚机转发网络包" class="headerlink" title="同一子网中的不同虚机转发网络包"></a><strong>同一子网中的不同虚机转发网络包</strong></h2><h3 id="环境描述"><a href="#环境描述" class="headerlink" title="环境描述"></a><strong>环境描述</strong></h3><ul>
+<li><p>Project network</p>
+<ul>
+<li>Network: 10.0.1.0/24</li>
+</ul>
+</li>
+<li><p>Compute node 1:</p>
+<ul>
+<li>host01:10.0.1.3</li>
+</ul>
+</li>
+<li><p>Compute node 2:</p>
+<ul>
+<li>host02:10.0.1.4</li>
+</ul>
+</li>
+<li><p>host01和host02属于同一project network（10.0.1.0/24），创建的时候分别部署在不同的compute node上</p>
+</li>
+<li><p>host01向host02发送网络包</p>
+</li>
+</ul>
+<h3 id="过程分析-2"><a href="#过程分析-2" class="headerlink" title="过程分析"></a><strong>过程分析</strong></h3><h4 id="compute-node1的网络包转发过程"><a href="#compute-node1的网络包转发过程" class="headerlink" title="compute node1的网络包转发过程"></a><strong><em>compute node1的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，host01先将带有目的地址10.0.1.4的network-10.0.1.3的数据包发送给linux bridge；</li>
+<li>（2）接着，Linux Bridge根据安全组规则对network-10.0.1.3的数据包进行处理，规则匹配后将数据包发送到br-int；</li>
+<li>（3）然后，br-int给network-10.0.1.3的网络添加vlan tag，并扔给br-tun，br-tun收到网络包后，根据流表规则匹配vlan tag，符合的对vlan tag进行剥离，添加相应的vxlan tunnel号扔给VXLAN隧道；</li>
+</ul>
+<h4 id="compute-node2的网络包转发过程"><a href="#compute-node2的网络包转发过程" class="headerlink" title="compute node2的网络包转发过程"></a><strong><em>compute node2的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，br-tun接收到VXLAN隧道内的网络数据包，将匹配的vxlan tunnel号的网络包剥离vxlan号，添加network-10.0.1.4的vlan tag，并将处理后的数据包扔给br-int；</li>
+<li>（2）接着，br-int将数据包交给linux bridge；</li>
+<li>（3）然后，Linux Bridge根据安全组规则对network-10.0.1.4的数据包进行处理，将处理后的数据包通过tap设备交给host02。</li>
+</ul>
+<img src="/images/understanding-neutron1/understanding_neutron_same_subnet.PNG">
+<h2 id="不同子网中的不同虚机转发网络包"><a href="#不同子网中的不同虚机转发网络包" class="headerlink" title="不同子网中的不同虚机转发网络包"></a><strong>不同子网中的不同虚机转发网络包</strong></h2><h3 id="环境描述-1"><a href="#环境描述-1" class="headerlink" title="环境描述"></a><strong>环境描述</strong></h3><ul>
+<li><p>Project network1</p>
+<ul>
+<li>Network: 10.0.1.0/24</li>
+</ul>
+</li>
+<li><p>Project network2</p>
+<ul>
+<li>Network: 10.1.0.0/24</li>
+</ul>
+</li>
+<li><p>Compute node 1:</p>
+<ul>
+<li>host03:10.1.0.4</li>
+</ul>
+</li>
+<li><p>Compute node 2:</p>
+<ul>
+<li>host02:10.0.1.4</li>
+</ul>
+</li>
+<li><p>两个Project network同属于一个路由namespace</p>
+</li>
+<li><p>host03向host02发送网络包</p>
+</li>
+</ul>
+<h3 id="过程分析-3"><a href="#过程分析-3" class="headerlink" title="过程分析"></a><strong>过程分析</strong></h3><h4 id="compute-node1的网络包转发过程-1"><a href="#compute-node1的网络包转发过程-1" class="headerlink" title="compute node1的网络包转发过程"></a><strong><em>compute node1的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，host01先将带有目的网关地址10.1.0.1的network-10.1.0.4的数据包发送给linux bridge；</li>
+<li>（2）接着，Linux Bridge根据安全组规则对network-10.1.0.4的数据包进行处理，规则匹配后将数据包发送到br-int；</li>
+<li>（3）然后，br-int给network-10.1.0.4的网络添加vlan tag，并扔给br-tun，br-tun收到网络包后，根据流表规则匹配vlan tag，符合的对vlan tag进行剥离，添加相应的vxlan tunnel号扔给VXLAN隧道；</li>
+</ul>
+<h4 id="network-node的网络包转发过程-1"><a href="#network-node的网络包转发过程-1" class="headerlink" title="network node的网络包转发过程"></a><strong><em>network node的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，br-tun收到VXLAN隧道内的网络包，匹配规则剥掉vxlan tunnel号，添加network-10.1.0.4的vlan tag，将数据包扔给br-int；</li>
+<li>（2）接着，br-int将带有network-10.1.0.4的vlan tag的数据包扔给路由服务的qr-1端口，qr-1端口包含network-10.1.0.4的网关地址10.1.0.1，然后路由器将数据包广播路由给qr-2端口，qr-2端口包含network-10.0.1.4的网关地址10.0.1.1；</li>
+<li>（3）然后，路由服务qrouter将数据包交给br-int，br-int将数据包添加上network-10.0.1.4的vlan tag；</li>
+<li>（4）最后，br-int将数据包扔给br-tun，br-tun匹配vlan tag后，剥离vlan tag，并添加可以识别network-10.0.1.4的vxlan tunnel号，然后扔到VXLAN隧道中去。</li>
+</ul>
+<h4 id="compute-node2的网络包转发过程-1"><a href="#compute-node2的网络包转发过程-1" class="headerlink" title="compute node2的网络包转发过程"></a><strong><em>compute node2的网络包转发过程</em></strong></h4><ul>
+<li>（1）首先，br-tun接收到VXLAN隧道内的网络数据包，将匹配的vxlan tunnel号的网络包剥离vxlan号，添加network-10.0.1.4的vlan tag，并将处理后的数据包扔给br-int；</li>
+<li>（2）接着，br-int将数据包交给linux bridge；</li>
+<li>（3）然后，Linux Bridge根据安全组规则对network-10.0.1.4的数据包进行处理，将处理后的数据包通过tap设备交给host02。</li>
+</ul>
+<img src="/images/understanding-neutron1/understanding_neutron_different_subnet.PNG">
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/neutron/" rel="tag"># neutron</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/11/2016-07-11-understanding-neutron-vlan-vxlan/" rel="next" title="neutron的VLAN和VXLAN流表实现机制">
+                <i class="fa fa-chevron-left"></i> neutron的VLAN和VXLAN流表实现机制
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/23/2016-07-23-understanding-neutron-creating-vm/" rel="prev" title="neutron的plugin以及创建网络机制介绍">
+                neutron的plugin以及创建网络机制介绍 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="yuchenghui" />
+          <p class="site-author-name" itemprop="name">yuchenghui</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">39</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#南北流量实现机制"><span class="nav-number">1.</span> <span class="nav-text">南北流量实现机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Project-network向External-network发送网络包"><span class="nav-number">1.1.</span> <span class="nav-text">Project network向External network发送网络包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#环境准备"><span class="nav-number">1.1.1.</span> <span class="nav-text">环境准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过程分析"><span class="nav-number">1.1.2.</span> <span class="nav-text">过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#计算节点的网络包转发过程"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">计算节点的网络包转发过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#网络节点的网络包转发过程"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">网络节点的网络包转发过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#External-network向Project-network发送网络包"><span class="nav-number">1.2.</span> <span class="nav-text">External network向Project network发送网络包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#环境准备-1"><span class="nav-number">1.2.1.</span> <span class="nav-text">环境准备</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过程分析-1"><span class="nav-number">1.2.2.</span> <span class="nav-text">过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#network-node的网络包转发过程"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">network node的网络包转发过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#compute-node的网络包转发过程"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">compute node的网络包转发过程</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#东西流量实现机制"><span class="nav-number">2.</span> <span class="nav-text">东西流量实现机制</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#同一子网中的不同虚机转发网络包"><span class="nav-number">2.1.</span> <span class="nav-text">同一子网中的不同虚机转发网络包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#环境描述"><span class="nav-number">2.1.1.</span> <span class="nav-text">环境描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过程分析-2"><span class="nav-number">2.1.2.</span> <span class="nav-text">过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#compute-node1的网络包转发过程"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">compute node1的网络包转发过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#compute-node2的网络包转发过程"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">compute node2的网络包转发过程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不同子网中的不同虚机转发网络包"><span class="nav-number">2.2.</span> <span class="nav-text">不同子网中的不同虚机转发网络包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#环境描述-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">环境描述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过程分析-3"><span class="nav-number">2.2.2.</span> <span class="nav-text">过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#compute-node1的网络包转发过程-1"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">compute node1的网络包转发过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#network-node的网络包转发过程-1"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">network node的网络包转发过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#compute-node2的网络包转发过程-1"><span class="nav-number">2.2.2.3.</span> <span class="nav-text">compute node2的网络包转发过程</span></a></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yuchenghui</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+  
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

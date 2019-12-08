@@ -1,0 +1,727 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|Monaco:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="动态规划," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="本文选取了《算法导论》第十五章动态规划里面的内容
+
+问题描述在欧几里得旅行商问题中，给定的平面上n个点作为输入，希望给出连接所有n个点的最短巡游路径，如下图所示给出了一个7个点问题的解。该问题是$NP$难问题，为了便于求解，下面对问题进行了简化：
+限制巡游路线为双调巡游，即从最左边的点开始，严格向右前进，直至最右边的点，然后掉头严格向左前进，直至回到起始点。右图给出了相同的7个点的最短双调巡游">
+<meta property="og:type" content="article">
+<meta property="og:title" content="双调旅行商问题">
+<meta property="og:url" content="http://yoursite.com/2018/06/07/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/index.html">
+<meta property="og:site_name" content="于成辉的技术博客">
+<meta property="og:description" content="本文选取了《算法导论》第十五章动态规划里面的内容
+
+问题描述在欧几里得旅行商问题中，给定的平面上n个点作为输入，希望给出连接所有n个点的最短巡游路径，如下图所示给出了一个7个点问题的解。该问题是$NP$难问题，为了便于求解，下面对问题进行了简化：
+限制巡游路线为双调巡游，即从最左边的点开始，严格向右前进，直至最右边的点，然后掉头严格向左前进，直至回到起始点。右图给出了相同的7个点的最短双调巡游">
+<meta property="og:image" content="http://yoursite.com/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/Double-traveling-salesman.png">
+<meta property="og:image" content="http://yoursite.com/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/i-j.png">
+<meta property="og:image" content="http://yoursite.com/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/7-1.png">
+<meta property="og:updated_time" content="2018-06-11T06:39:57.321Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="双调旅行商问题">
+<meta name="twitter:description" content="本文选取了《算法导论》第十五章动态规划里面的内容
+
+问题描述在欧几里得旅行商问题中，给定的平面上n个点作为输入，希望给出连接所有n个点的最短巡游路径，如下图所示给出了一个7个点问题的解。该问题是$NP$难问题，为了便于求解，下面对问题进行了简化：
+限制巡游路线为双调巡游，即从最左边的点开始，严格向右前进，直至最右边的点，然后掉头严格向左前进，直至回到起始点。右图给出了相同的7个点的最短双调巡游">
+<meta name="twitter:image" content="http://yoursite.com/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/Double-traveling-salesman.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/07/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/"/>
+
+
+
+
+
+  <title> 双调旅行商问题 | 于成辉的技术博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">于成辉的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">技术人生</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/07/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="yuchenghui">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="于成辉的技术博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="于成辉的技术博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                双调旅行商问题
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-06-07T15:25:15+08:00">
+                2018-06-07
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/算法/" itemprop="url" rel="index">
+                    <span itemprop="name">算法</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <hr>
+<blockquote>
+<p>本文选取了《算法导论》第十五章动态规划里面的内容</p>
+</blockquote>
+<h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a><strong>问题描述</strong></h2><p>在<code>欧几里得旅行商</code>问题中，给定的平面上n个点作为输入，希望给出连接所有n个点的最短巡游路径，如下图所示给出了一个7个点问题的解。该问题是$NP$难问题，为了便于求解，下面对问题进行了简化：</p>
+<p>限制巡游路线为<code>双调巡游</code>，即从最左边的点开始，严格向右前进，直至最右边的点，然后掉头严格向左前进，直至回到起始点。右图给出了相同的7个点的最短双调巡游路线。</p>
+<img src="/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/Double-traveling-salesman.png">
+<p>请设计一个$O(n^2)$时间的<code>最优双调巡游路线</code>的算法，可以认为任意两个点的$x$坐标均不同，且所有的实数运算都花费单位时间。</p>
+<h2 id="过程分析"><a href="#过程分析" class="headerlink" title="过程分析"></a><strong>过程分析</strong></h2><p>该问题满足最优子结构和重叠子问题，可以采用动态规划来进行解决。</p>
+<p>根据简化后的双调欧几里得旅行问题的性质，将点集依据各点x坐标单调递增来进行编号，我们设$b[i,j]$是最短双调闭合旅程$P(i,j)$的长度$(i&lt;=j)$，而最短双条闭合旅程$P(i,j)$是指从点$P[i]$开始,严格地向左走（即是每次经过的点的$x$坐标都比前一个点的$x$坐标要小），直到最左点$P[1]$,然后再严格向右走，直到终点$P[j]$为止，在从$P[i]$到$P[j]$过程中的点有且只经过一次。设$distance[i,j]$是点$P[i]$到$P[j]$之间的欧式距离。<br>那么，根据动态规划的方法，我们要找出问题的最优子结构，并且递归定义出来，下面是问题的公式（大前提是$i&lt;=j$）：</p>
+<p>$$ b[i,j]= \begin{cases} distance(1,2), &amp; \text {if $i = 1, j = 2 $}  \\ b[i,j-1] + distance(j-1,j), &amp; \text{ $i&lt;j-1$ } \\ min(b[k,j-1] + distance(k,j)), &amp; \text{ if $i=j-1, 1&lt;=k&lt;j-1$ } \end{cases} $$</p>
+<p>公式说明：<br>最短双调旅程$P(i,j)$在到达终点$P[j]$之前，正常来说，按照双调的概念，一定经过了一个其$x$坐标刚好比点$P[j]$小的点，也就是$P[j-1]$(假设$i不等于j-1$)。</p>
+<ul>
+<li>当$i&lt;j-1$时，最短双调旅程$P(i,j)$的长度应该可以看成是其子问题$P(i,j-1)$的长度和点$distance(j-1，j)$的和。</li>
+<li>当$i=j-1$时，问题就不同了，因为我们不能一开始从点$P[i]$直接跳到$P[j]$，因为其他点都还没有走过一次,所以在到达终点$P[j]$的前一个点不能再是点$P[j-1]$(即$P[i]$)，那如何是好呢？因为在到达终点$P[j]$之前肯定要经过一个点的，但不知道是哪个点，我们不妨设该点是$P[k]$，那么k的范围肯定是$1&lt;=k&lt;j-1$（因为是除了点$P[j-1]$和$P[j]$之外的点），当然该点$P[k]$要使得双调旅程$P(i,j)$的长度最短,于是在$k$的可能范围中找，于是再使用一个$min$操作。$i=j-1$时的情况类似于矩阵链乘的问题,其实这也是动态规划的惯用手法，假设一个最优选择，然后再基于该最优选择来定义问题。</li>
+</ul>
+<p>这相当于我们每次求解问题$P(i,j)$，都作了一次选择，要么是点$P[j-1]$或是点$P[k]$作为$P[j]$的前一个点，其示意图如下：</p>
+<img src="/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/i-j.png">
+<p>综上所述，该问题需要求解的是$b[n,n]$,于是</p>
+<p>$$b[n,n]=b[n-1,n]+distance(n-1,n)$$</p>
+<p>这里要注意的一点，在之前的公式中，并不涉及求解类似$b[i,i]$的值,这里定义了$b[i,i]$的情况。<br>除此之外，还涉及到了对最优解的重构的问题。我们将使用一个$r[i][j]$数组表示子问题$P(i,j)$在到达终点$P[j]$之前经过的一个点$P[k]$对应的$k$值（仅挨着点$P[j]$的点），则子问题的解可以组织为其更小的子问题$P(i，k)$的解加上点$P[k]$和点$P[j]$。由之前的解题思路可知，对于问题$P(i,j)$,当$i=j-1$时，$k&lt;i$,当$i&lt;j-1$时，$k=j-1$。</p>
+<p><strong>构造解的过程如下：</strong></p>
+<p>每次加入的点总是在序号大的点下，因为问题$P(i,j)$总是分解为子问题$P(i,k)$,不管$k$是等于$j-1$，还是小于$j-1$，然后确定点$P[k]$是到达$P[j]$之前的一个点，这也是问题每次选择的结果。使用一个数组存放序号，一边从0开始，一边从末尾开始。</p>
+<img src="/images/algorithm/Dynamic/2018-06-07-algorithm-Dynamic-Double-traveling-salesman/7-1.png">
+<h2 id="代码段"><a href="#代码段" class="headerlink" title="代码段"></a><strong>代码段</strong></h2><figure class="highlight c++"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">double</span> <span class="title">distance</span><span class="params">(<span class="keyword">int</span> i,<span class="keyword">int</span> j)</span></span>&#123; </div><div class="line">    <span class="keyword">return</span> <span class="built_in">sqrt</span>((points[i].x-points[j].x)*(points[i].x-points[j].x) </div><div class="line">        +(points[i].y-points[j].y)*(points[i].y-points[j].y)); </div><div class="line">&#125; </div><div class="line"> </div><div class="line"><span class="function"><span class="keyword">double</span> <span class="title">Euclidean_TSP</span><span class="params">()</span></span>&#123; </div><div class="line">    b[<span class="number">1</span>][<span class="number">2</span>]=distance(<span class="number">1</span>,<span class="number">2</span>);<span class="comment">//最小的子问题 </span></div><div class="line">     </div><div class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j=<span class="number">3</span>;j&lt;=N;j++) </div><div class="line">    &#123; </div><div class="line">        <span class="comment">//i&lt;j-1且i&gt;=1时的情况 </span></div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;j<span class="number">-1</span>;i++) </div><div class="line">        &#123; </div><div class="line">            b[i][j] = b[i][j<span class="number">-1</span>]+distance(j<span class="number">-1</span>,j); </div><div class="line">            r[i][j] = j<span class="number">-1</span>; </div><div class="line">        &#125; </div><div class="line">        <span class="comment">//i=j-1的情况 </span></div><div class="line">        b[j<span class="number">-1</span>][j] = b[<span class="number">1</span>][j<span class="number">-1</span>]+distance(<span class="number">1</span>,j);<span class="comment">//先设初值为k=1时的值 </span></div><div class="line">        r[j<span class="number">-1</span>][j] = <span class="number">1</span>; </div><div class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> k=<span class="number">1</span>;k&lt;j<span class="number">-1</span>;k++) </div><div class="line">        &#123; </div><div class="line">            <span class="keyword">double</span> q = b[k][j<span class="number">-1</span>]+distance(k,j); </div><div class="line">            <span class="keyword">if</span> (q &lt; b[j<span class="number">-1</span>][j]) </div><div class="line">            &#123; </div><div class="line">                b[j<span class="number">-1</span>][j] = q; </div><div class="line">                r[j<span class="number">-1</span>][j] = k; </div><div class="line">            &#125; </div><div class="line">        &#125; </div><div class="line">    &#125; </div><div class="line">    b[N][N] = b[N<span class="number">-1</span>][N]+distance(N<span class="number">-1</span>,N); </div><div class="line">    <span class="keyword">return</span> b[N][N]; </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/动态规划/" rel="tag"># 动态规划</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/07/2018-06-07-algorithm-Dynamic-Palindrome/" rel="next" title="最长回文子序列问题">
+                <i class="fa fa-chevron-left"></i> 最长回文子序列问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/22/2018-07-22-deep-learning-rcnn/" rel="prev" title="R-CNN目标检测方法介绍与详解">
+                R-CNN目标检测方法介绍与详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="yuchenghui" />
+          <p class="site-author-name" itemprop="name">yuchenghui</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">39</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题描述"><span class="nav-number">1.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#过程分析"><span class="nav-number">2.</span> <span class="nav-text">过程分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#代码段"><span class="nav-number">3.</span> <span class="nav-text">代码段</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yuchenghui</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

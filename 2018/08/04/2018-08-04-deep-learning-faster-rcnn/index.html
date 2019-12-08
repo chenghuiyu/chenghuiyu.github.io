@@ -1,0 +1,817 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Slab:300,300italic,400,400italic,700,700italic|Lobster Two:300,300italic,400,400italic,700,700italic|Monaco:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="R-CNN," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="英文原文地址参考文章地址代码实现: Luminoth
+
+本文包括英文原文的部分翻译以及相关内容的梳理。
+
+背景Faster-RCNN是RCNN系列论文的第三次迭代，前两次分别为R-CNN和Fast R-CNN，第一代模型R-CNN，其使用了称为Selective Search的算法用来提取感兴趣候选区域，并用一个标准的卷积神经网络 (CNN) 去分类和调整这些区域。Fast R-CNN从R-CNN">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深度解析Faster R-CNN">
+<meta property="og:url" content="http://yoursite.com/2018/08/04/2018-08-04-deep-learning-faster-rcnn/index.html">
+<meta property="og:site_name" content="于成辉的技术博客">
+<meta property="og:description" content="英文原文地址参考文章地址代码实现: Luminoth
+
+本文包括英文原文的部分翻译以及相关内容的梳理。
+
+背景Faster-RCNN是RCNN系列论文的第三次迭代，前两次分别为R-CNN和Fast R-CNN，第一代模型R-CNN，其使用了称为Selective Search的算法用来提取感兴趣候选区域，并用一个标准的卷积神经网络 (CNN) 去分类和调整这些区域。Fast R-CNN从R-CNN">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/Complete_Faster_R-CNN_architecture.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/VGG_architecture.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/Image_convolutional_feature_map.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/Anchor_centers_throught_the_original_image.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/left_right_all_Anchors.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/RPN.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/Convolutional_implementation_of_an_RPN.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/Region_of_Interest_Pooling.jpg">
+<meta property="og:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/R-CNN_architecture.jpg">
+<meta property="og:updated_time" content="2018-08-05T10:54:50.477Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深度解析Faster R-CNN">
+<meta name="twitter:description" content="英文原文地址参考文章地址代码实现: Luminoth
+
+本文包括英文原文的部分翻译以及相关内容的梳理。
+
+背景Faster-RCNN是RCNN系列论文的第三次迭代，前两次分别为R-CNN和Fast R-CNN，第一代模型R-CNN，其使用了称为Selective Search的算法用来提取感兴趣候选区域，并用一个标准的卷积神经网络 (CNN) 去分类和调整这些区域。Fast R-CNN从R-CNN">
+<meta name="twitter:image" content="http://yoursite.com/images/deep-learning/faster-rcnn/Complete_Faster_R-CNN_architecture.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/08/04/2018-08-04-deep-learning-faster-rcnn/"/>
+
+
+
+
+
+  <title> 深度解析Faster R-CNN | 于成辉的技术博客 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">于成辉的技术博客</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">技术人生</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/04/2018-08-04-deep-learning-faster-rcnn/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="yuchenghui">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/images/avatar.gif">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="于成辉的技术博客">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="于成辉的技术博客" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                深度解析Faster R-CNN
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-04T09:42:49+08:00">
+                2018-08-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+              <span class="post-meta-divider">|</span>
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/深度学习/" itemprop="url" rel="index">
+                    <span itemprop="name">深度学习</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+
+          
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>英文原文<a href="https://tryolabs.com/blog/2018/01/18/faster-r-cnn-down-the-rabbit-hole-of-modern-object-detection/" target="_blank" rel="external">地址</a><br>参考文章<a href="https://mp.weixin.qq.com/s?__biz=MzA3MzI4MjgzMw==&amp;mid=2650738167&amp;idx=3&amp;sn=dc26c3d273833192550290327d2c6220&amp;chksm=871ac989b06d409f89bd2a1ea99ed415a4118482805f05e692bef968a65301fc596957606fde&amp;scene=21#wechat_redirect" target="_blank" rel="external">地址</a><br>代码实现: <a href="https://github.com/tryolabs/luminoth/tree/master/luminoth/models/fasterrcnn" target="_blank" rel="external">Luminoth</a></p>
+<blockquote>
+<p>本文包括英文原文的部分翻译以及相关内容的梳理。</p>
+</blockquote>
+<h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p><a href="https://arxiv.org/abs/1506.01497" target="_blank" rel="external">Faster-RCNN</a>是<code>RCNN</code>系列论文的第三次迭代，前两次分别为<code>R-CNN</code>和<code>Fast R-CNN</code>，第一代模型R-CNN，其使用了称为<code>Selective Search</code>的算法用来提取感兴趣候选区域，并用一个标准的卷积神经网络 (CNN) 去分类和调整这些区域。<code>Fast R-CNN</code>从<code>R-CNN</code>演变优化而来，<code>Fast R-CNN</code>使用一种称为感兴趣区域池化（RoI）的技术，使得网络可以共享计算结果，从而让模型提速。这一系列算法最终被优化为 <code>Faster R-CNN</code>，这是第一个完全可微分的模型。</p>
+<h1 id="框架"><a href="#框架" class="headerlink" title="框架"></a>框架</h1><p><code>Faster R-CNN</code>的框架由几个模块部件组成，本文先从高层次的概述开始，之后会介绍不同组成部分的具体细节。</p>
+<p>从一张图片开始，我们将会得到以下三个结果：</p>
+<pre><code>•    一个边框列表（list of bounding boxes）
+•    每个边框会被分配一个标签
+•    每对标签和边框所对应的概率
+</code></pre><img src="/images/deep-learning/faster-rcnn/Complete_Faster_R-CNN_architecture.jpg">
+<p>输入的图片以$Height×Width×Depth$的张量形式表征，之后会被馈送入预训练好的卷积神经网络，在中间层得到特征图。使用该特征图作为特征提取器并用于下一流程。</p>
+<p>在为小数据集训练分类器时，在迁移学习<code>（Transfer Learning）</code>中经常使用上述的方法，通常利用在另一个较大数据集训练好的权重。本文的下一章节会深入了解这个部分。</p>
+<p>接着，使用到区域建议网络<code>（Region Proposal Network，RPN）</code>。<code>RPN</code>使用CNN计算得到的特征，去寻找到提前预设好数量的，并且可能包含目标的区域 (边框)。</p>
+<p>使用深度学习进行目标检测的时候，最大的困难可能是生成一个长度可变的<code>bounding boxes</code>列表。但是在使用深度神经网络建模时，模型最后一部分通常是一个固定尺寸的张量输出（除了循环神经网络），这就出现了bounding boxes大小尺寸和输出尺寸不匹配的问题。例如，在图片分类中，输出是 $(N,)$形状的张量，$N$是类的数量，其中在第$i$个位置标量含有该图片属于类$i$的概率$label_i$。</p>
+<p>在Faster R-CNN中，RPN中长度可变列表的问题可以使用Anchor<code>anchors</code>解决：使用固定尺寸的参考边框在原始图片上均匀的进行定位。不是直接探测目标在哪，而是把问题分两个方面建模，对每个<code>anchors</code>，考虑以下两个内容：</p>
+<pre><code>•    这个Anchor包含相关目标吗？
+•    如何调整`anchors`以更好的拟合到相关目标？
+</code></pre><p>在取得一系列的相关目标和其在原始图片上的位置后，目标探测问题就可以相对直观地解决了。使用 CNN 提取到的特征和相关目标的边框，我们在相关目标的特征图上使用感兴趣区域池化 <code>(RoI Pooling)</code>，并将与目标相关的特征信息存入一个新的张量。</p>
+<p>最后，处理的流程与R-CNN模型一致，利用这些信息：</p>
+<pre><code>•    对边框内的内容分类（或者舍弃它，并用「背景」标记边框内容）
+•    调整边框的坐标（使之更好地包含目标）
+</code></pre><p>显然，这样做会遗失掉部分信息，但这正是 Faster-RCNN 如何进行目标探测的基本思想。接下来的章节会仔细讨论框架、损失函数以及训练过程中各个组件的具体细节。</p>
+<h1 id="基础网络组成"><a href="#基础网络组成" class="headerlink" title="基础网络组成"></a>基础网络组成</h1><p>之前提到过，<code>Faster R-CNN</code>第一步要使用在图片分类任务 (例如，<code>ImageNet</code>) 上预训练好的卷积神经网络，使用该网络输出的中间层特征。这对拥有深度学习背景的人来说很简单，但是理解如何使用和为什么这样做才是关键，同时，可视化中间层的特征输出也很重要。没有一致的意见表明哪个网络框架是最好的。原始的<code>Faster R-CNN</code>使用的是在<code>ImageNet</code>上预训练的 <a href="https://arxiv.org/abs/1311.2901" target="_blank" rel="external">ZF</a> 和 <a href="https://arxiv.org/abs/1409.1556" target="_blank" rel="external">VGG</a>，但之后出现了很多不同的网络，且不同网络的参数数量变化很大。例如，<a href="https://arxiv.org/abs/1704.04861" target="_blank" rel="external">MobileNet</a>，以速度优先的一个小型的高效框架，大约有 330 万个参数，而<code>ResNet-152</code>(152 层)，曾经的 ImageNet 图片分类竞赛优胜者，大约有 6000 万个参数。最新的网络结构如<a href="https://arxiv.org/abs/1608.06993" target="_blank" rel="external">DenseNet</a>，可以在提高准确度的同时缩减参数数量。</p>
+<h2 id="VGG"><a href="#VGG" class="headerlink" title="VGG"></a>VGG</h2><p>在讨论网络结构的优缺点之前，让我们先以<code>VGG-16</code>为例来尝试理解<code>Faster-RCNN</code>是如何工作的。</p>
+<img src="/images/deep-learning/faster-rcnn/VGG_architecture.jpg">
+<p><code>VGG</code>，其名字来自于在<code>ImageNet ILSVRC 2014</code>竞赛中使用此网络的小组组名，当使用<code>VGG</code>进行分类任务时，其输入是$224×224×3$的张量 (表示一个$224×224$像素大小的$RGB$图片)。<strong>在分类任务中输入图片的尺寸是固定的，因为网络最后一部分的全连接层需要固定长度的输入</strong>。在接入全连接层前，通常要将最后一层卷积的输出展开成一维张量。</p>
+<p><strong>由于需要使用卷积网络中间层的输出，所以对输入图片的尺寸不再有限制</strong>。至少，由于只有卷积层参与计算，在这个模块中不再是问题。接下来深入了解一下底层的细节，看看具体要使用哪一层卷积网络的输出。<code>Faster R-CNN</code>论文中没有具体指定使用哪一层，但是在官方的实现中可以观察到，作者使用的是<code>conv5/conv5_1</code>这一层 (caffe代码)。</p>
+<p>每一层卷积网络都在前一层的特征信息基础上提取更加抽象的特征。第一层通常学习到简单的边缘，第二层寻找目标边缘的模式，以激活后续卷积网络中更加复杂的形状。最终，我们得到一个在空间维度上比原始图片小很多，但可以表征更深的卷积特征图。特征图的长和宽会随着卷积层间的池化而缩小，深度会随着卷积层滤波器的数量而增加。</p>
+<img src="/images/deep-learning/faster-rcnn/Image_convolutional_feature_map.jpg">
+<p><strong>卷积特征图将图片的所有信息编码到深度的维度上，同时保留着原始图片上目标物体的相对位置信息</strong>。例如，如果图片左上角有一个红色矩形，经过卷积层的激活，那么红色矩形的位置信息仍然保留在卷积特征图的左上角。</p>
+<h2 id="VGG-vs-ResNet"><a href="#VGG-vs-ResNet" class="headerlink" title="VGG vs ResNet"></a>VGG vs ResNet</h2><p>如今，<code>ResNet</code>已经取代大多数<code>VGG</code>网络作为提取特征的基础框架。<code>Faster-RCNN</code>的三位联合作者 (Kaiming He, Shaoqing Ren 和 Jian Sun) 也是论文<a href="https://arxiv.org/abs/1512.03385" target="_blank" rel="external">Deep Residual Learning for Image Recognition</a>的作者，这篇论文最初介绍了<code>ResNets</code>这一框架。</p>
+<p>ResNet对比VGG的优势在于它是一个更深层、大型的网络，因此有更大的容量去学习所需要的信息。这些结论在图片分类任务中可行，在目标探测的问题中也应该同样有效。</p>
+<p><code>ResNet</code>在使用残差连接和<code>Batch Normalization</code>的方法后更加易于训练，这些方法在VGG发布的时候还没有出现。</p>
+<h1 id="Anchors"><a href="#Anchors" class="headerlink" title="Anchors"></a>Anchors</h1><p>经过基础网络的处理，原始的图片转换成了特征图，下面利用特征图进行目标区域的建议选择，也就是可以用于分类任务的感兴趣区域（regions of interest，RoI），之前提到过Anchors是解决长度可变问题的一种方法，现在将详细介绍。</p>
+<p>我们的目标是寻找图片中的边框。这些边框是不同尺寸、不同比例的矩形。设想我们在解决问题前已知图片中有两个目标。那么首先想到的应该是训练一个网络，这个网络返回$8$个值：包括<br>$ (x<em>{min},y</em>{min},x<em>{max},y</em>{max}) $的两个元组，每个元组都用于定义一个目标的边框坐标。但是这里面存在一些问题，例如，图片可能是不同尺寸和比例的，因此训练一个可以直接准确预测原始坐标的模型是很复杂的。另一个问题是无效预测：当预测$ (x<em>{min}, x</em>{max}) $和$ (y<em>{min}, y</em>{max}) $时，应该强制设定$ x<em>{min} &lt; x</em>{max} $。</p>
+<p>$ (x<em>{min},y</em>{min},x<em>{max},y</em>{max}) $<br>$ (x<em>{center}, y</em>{center}, width, height) $<br>$ ( \Delta x<em>{center},\Delta y</em>{center},\Delta width, \Delta height) $</p>
+<p>另一种更加简单的方法是去预测参考边框的偏移量。使用参考边框$ (x<em>{center}, y</em>{center}, width, height) $，学习预测偏移量$ ( \Delta x<em>{center},\Delta y</em>{center},\Delta width, \Delta height) $，因此我们只得到一些小数值的预测结果并挪动参考变量就可以达到更好的拟合结果。</p>
+<p><code>Anchors</code>是用<strong>固定的边框置于不同尺寸和比例的图片上，并且在之后首次预测目标位置的时候作为参考边框</strong>。</p>
+<p>我们在处理的卷积特征图的尺寸分别是$ conv<em>{width}×conv</em>{height}×conv<em>{depth} $，因此在卷积图的$ conv</em>{width}×conv_{height} $上每一个点都生成一组Anchor。很重要的一点是即使我们是在特征图上生成Anchors，这些Anchors最终是要映射回原始图片的尺寸。</p>
+<p>因为我们只用到了卷积和池化层，所以特征图的最终维度与原始图片是呈比例的。数学上，如果图片的尺寸是 $w×h$，那么特征图最终会缩小到尺寸为$w/r$和$h/r$，其中$r$是次级采样率。如果我们在特征图上每个空间位置上都定义一个Anchors，那么最终图片的Anchors会相隔$r$个像素，在 VGG 中，r=16。</p>
+<img src="/images/deep-learning/faster-rcnn/Anchor_centers_throught_the_original_image.jpg">
+<p>为了选择一组合适Anchors，我们通常定义一组固定尺寸 (例如，64px、128px、256px，此处为边框大小) 和比例 (例如，0.5、1、1.5，此处为边框长宽比) 的边框，使用这些变量的所有可能组合得到候选边框，下面左图使用的是1个anchor和9个bounding box。</p>
+<img src="/images/deep-learning/faster-rcnn/left_right_all_Anchors.jpg">
+<h1 id="Region-Proposal-Network（RPN）"><a href="#Region-Proposal-Network（RPN）" class="headerlink" title="Region Proposal Network（RPN）"></a>Region Proposal Network（RPN）</h1><img src="/images/deep-learning/faster-rcnn/RPN.jpg">
+<p>像我们之前提到的那样，RPN接受所有的参考框（Anchors）并为检测的目标输出比较好的建议结果。它通过为每个Anchors提供两个不同的输出来完成。</p>
+<p>第一个输出是Anchors作为目标的概率，即目标性得分。注意，RPN并不关心目标的类别，只在意它实际上是不是一个目标（而不是背景）。我们将用这个目标性得分来过滤掉不好的预测，为第二阶段做准备。第二个输出是边框回归，用于调整Anchor以更好的拟合其预测的目标。</p>
+<p>RPN 是用完全卷积的方式高效实现的，用基础网络返回的中间层输出的卷积特征图作为输入。首先，我们使用一个有$512$个通道和$3 \times 3$卷积核大小的卷积层，然后我们有两个使用$1 \times 1$卷积核的并行卷积层，其通道数量取决于每个点的Anchor数量。</p>
+<img src="/images/deep-learning/faster-rcnn/Convolutional_implementation_of_an_RPN.jpg">
+<p>对于分类层，我们对每个Anchor输出两个预测值：</p>
+<ul>
+<li>背景（不是目标）的分数</li>
+<li>前景（实际的目标）的分数。</li>
+</ul>
+<p>对于回归或边框调整层，我们输出四个预测值：$(\Delta x<em>{center},\Delta y</em>{center},\Delta width,\Delta height)$，我们将会把这些值用到Anchor中来得到最终的建议。</p>
+<p>使用最终的建议坐标和它们的目标性得分，然后可以得到对于目标的很好的建议结果。</p>
+<h2 id="训练、目标和损失函数"><a href="#训练、目标和损失函数" class="headerlink" title="训练、目标和损失函数"></a>训练、目标和损失函数</h2><p>RPN执行两种不同类型的预测：二进制分类和边框回归调整。为了训练，我们把所有的Anchor分成两类。一类是”前景”，它与真实目标重叠并且其<a href="https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/" target="_blank" rel="external">IoU</a>值大于 0.5；另一类是”背景”，它不与任何真实目标重叠或与真实目标的IoU值小于0.1。</p>
+<p>然后，我们对这些Anchor随机采样，构成大小为256的<code>mini batch</code>——维持前景Anchor和背景Anchor之间的平衡比例。</p>
+<p>RPN用所有以<code>mini batch</code>筛选出来的Anchor和二进制交叉熵（binary cross entropy）来计算分类损失。然后它只用那些标记为前景的<code>mini batch</code>Anchor来计算回归损失。为了计算回归的目标，我们使用前景Anchor和最接近的真实目标，并计算将Anchor转化为目标所需的正确$\Delta$。</p>
+<p>论文中建议使用<code>Smooth L1 loss</code>来计算回归误差，而不是用简单的<code>L1</code>或<code>L2 loss</code>。<code>Smooth L1</code>基本上就是 L1，但是当 L1 的误差足够小，由确定的$\sigma$定义时，可以认为误差几乎是正确的且损失以更快的速率减小。</p>
+<p>使用<code>dynamic batches</code>是具有挑战性的，这里的原因很多。即使我们试图维持前景Anchor和背景Anchor之间的平衡比例，但这并不总是可能的。根据图像上的真实目标以及Anchor的大小和比例，可能会得到零前景Anchor。在这种情况下，我们转而使用对于真实框具有最大IoU值的Anchor。这远非理想情况，但是为了总是有前景样本和目标可以学习，这还是挺实用的。</p>
+<h2 id="后处理"><a href="#后处理" class="headerlink" title="后处理"></a>后处理</h2><h3 id="非极大抑制-Non-maximum-suppression"><a href="#非极大抑制-Non-maximum-suppression" class="headerlink" title="非极大抑制(Non-maximum suppression)"></a>非极大抑制(Non-maximum suppression)</h3><p>由于Anchor经常重叠，因此proposal最终也会在同一个目标上重叠。为了解决重复建议的问题，我们使用一个简单的算法，称为非极大抑制（NMS）。NMS获取按照分数排序的建议列表并对已排序的列表进行迭代，丢弃那些IoU值大于某个预定义阈值的建议，并提出一个具有更高分数的建议。</p>
+<p>虽然这看起来很简单，但对IoU的阈值设定一定要非常小心。太低，你可能会丢失对目标的建议；太高，你可能会得到对同一个目标的很多建议。常用值是0.6。</p>
+<h3 id="建议选择-Proposal-selection"><a href="#建议选择-Proposal-selection" class="headerlink" title="建议选择(Proposal selection)"></a>建议选择(Proposal selection)</h3><p>应用NMS后，我们保留评分最高的N个建议。论文中使用 N=2000，但是将这个数字降低到50仍然可以得到相当好的结果。</p>
+<h2 id="独立应用程序"><a href="#独立应用程序" class="headerlink" title="独立应用程序"></a>独立应用程序</h2><p>RPN 可以独立使用，而不需要第二阶段的模型。在只有一类对象的问题中，目标性概率可以用作最终的类别概率。这是因为在这种情况下，“前景“=”目标类别“以及”背景“=”不是目标类别“。</p>
+<p>一些从独立使用 RPN 中受益的机器学习问题的例子包括流行的（但仍然是具有挑战性的）人脸检测和文本检测。</p>
+<p>仅使用 RPN 的优点之一是训练和预测的速度都有所提高。由于 RPN 是一个非常简单的仅使用卷积层的网络，所以预测时间比使用分类基础网络更快。</p>
+<h1 id="兴趣区域池化（RoI-pooling）"><a href="#兴趣区域池化（RoI-pooling）" class="headerlink" title="兴趣区域池化（RoI pooling）"></a>兴趣区域池化（RoI pooling）</h1><p>在 RPN 步骤之后，得到很多没有分类的object proposals(即bounding boxes)，下面的问题就是将这些bounding boxes分配到想要的类别中去。</p>
+<p>最简单的方法是采用每个region proposal，裁剪成固定尺寸，然后让它通过预训练的基础网络。然后，我们可以用提取的特征作为普通图像分类器的输入。这种方法的主要问题是运行所有2000个建议的计算效率和速度都是非常低的。</p>
+<p>Faster R-CNN 试图通过复用现有的卷积特征图来解决或至少缓解这个问题。这是通过用兴趣区域池化为每个region proposal提取固定大小的特征图实现的。R-CNN需要固定大小的特征图，以便将它们分类到固定数量的类别中。</p>
+<img src="/images/deep-learning/faster-rcnn/Region_of_Interest_Pooling.jpg">
+<p>一种更简单的方法（被包括 Luminoth 版本的 Faster R-CNN 在内的目标检测实现方法所广泛使用），是用每个region proposal来裁剪卷积特征图，然后用插值（通常是双线性的）将每个裁剪调整为固定大小$ 14×14×conv<em>{depth} $。裁剪之后，用 $2×2$ 核大小的最大池化来获得每个建议最终的$ 7×7×conv</em>{depth} $特征图。</p>
+<p>选择这些确切形状的原因与下一模块（R-CNN）如何使用它有关，这些设定是根据第二阶段的用途得到的。</p>
+<h1 id="基于region-proposal的卷积神经网络-R-CNN"><a href="#基于region-proposal的卷积神经网络-R-CNN" class="headerlink" title="基于region proposal的卷积神经网络(R-CNN)"></a>基于region proposal的卷积神经网络(R-CNN)</h1><p>R-CNN是 Faster R-CNN 工作流的最后一步。从图像上获得卷积特征图之后，用它通过RPN来获得object proposal并最终为每个proposal提取特征（通过RoI Pooling），最后我们需要使用这些特征进行分类。R-CNN 试图模仿分类 CNNs 的最后阶段，在这个阶段用一个全连接层为每个可能的目标类输出一个分数。</p>
+<p>R-CNN 有两个不同的目标：</p>
+<ol>
+<li>将建议分到一个类中，加上一个背景类（用于删除不好的建议）。</li>
+<li>根据预测的类别更好地调整region proposal的边框。</li>
+</ol>
+<p>在最初的 Faster R-CNN 论文中，R-CNN 对每个region proposal采用特征图，将它平坦化并使用两个大小为4096的有$ReLU$激活函数的全连接层。</p>
+<p>然后，它对每个不同的目标使用两种不同的全连接层：</p>
+<pre><code>•    一个有$N+1$个单元的全连接层，其中$N$是类的总数，另外一个是背景类。
+•    一个有$4N$个单元的全连接层。我们希望有一个回归预测，因此对$N$个类别中的每一个可能的类别，
+我们都需要$ (\Delta x_{center},\Delta y_{center},\Delta width,\Delta height) $。
+</code></pre><img src="/images/deep-learning/faster-rcnn/R-CNN_architecture.jpg">
+<h2 id="训练和目标"><a href="#训练和目标" class="headerlink" title="训练和目标"></a>训练和目标</h2><p>R-CNN 的目标与 RPN 的目标的计算方法几乎相同，但是考虑的是不同的可能类别。我们采用region proposal和真实边框，并计算它们之间的IoU。</p>
+<p>那些有任何真实边框的建议，只要其 IoU 大于 0.5，都被分配给那个真实数据。那些 IoU 在 0.1 和 0.5 之间的被标记为背景。与我们在为 RPN 分配目标时相反的是，我们忽略了没有任何交集的region proposal。这是因为在这个阶段，我们假设已经有好的region proposal并且我们对解决更困难的情况更有兴趣。当然，这些所有的值都是可以为了更好的拟合你想找的目标类型而做调整的超参数。</p>
+<p>边框回归的目标是计算region proposal和与其对应的真实框之间的偏移量，仅针对那些基于 IoU 阈值分配了类别的建议。</p>
+<p>我们随机抽样了一个尺寸为 64 的 balanced mini batch，其中我们有高达 25% 的前景建议（有类别）和 75% 的背景。</p>
+<p>按照我们对 RPN 损失所做的相同处理方式，现在的分类损失是一个多类别的交叉熵损失，使用所有选定的建议和用于与真实框匹配的 25% 建议的 Smooth L1 loss。由于 R-CNN 边框回归的全连接网络的输出对于每个类都有一个预测，所以当我们得到这种损失时必须小心。在计算损失时，我们只需要考虑正确的类。</p>
+<h2 id="后处理-1"><a href="#后处理-1" class="headerlink" title="后处理"></a>后处理</h2><p>与 RPN 相似，我们最终得到了很多已经分配了类别的目标，在返回它们之前需要进一步处理。</p>
+<p>为了实施边框调整，我们必须考虑哪个类别具有对该建议的最高概率。我们也需要忽略具有最高概率的背景类的建议。</p>
+<p>在得到最终目标和忽略被预测为背景的目标之后，我们应用基于类的 NMS。这通过按类进行分组完成，通过概率对其排序，然后将 NMS 应用于每个独立的组。</p>
+<p>对于我们最后的目标列表，我们也可以设置一个概率阈值并且对每个类限制目标的数量。</p>
+<h1 id="训练"><a href="#训练" class="headerlink" title="训练"></a>训练</h1><p>在最初的论文中，Faster R-CNN 是用多步法训练的，独立地训练各部分并且在应用最终的全面训练方法之前合并训练的权重。之后，人们发现进行端到端的联合训练会带来更好的结果。</p>
+<p>把完整的模型放在一起后，我们得到 4 个不同的损失，两个用于 RPN，另外两个用于 R-CNN。我们在 RPN 和 R-CNN 中有可训练的层，我们也有可以训练（微调）或不能训练的基础网络。</p>
+<p>是否训练基础网络的决定取决于我们想要学习的目标特性和可用的计算能力。如果我们想检测与在原始数据集（用于训练基础网络）上的数据相似的目标，那么除了尝试压缩我们能获得的所有可能的性能外，其他做法都是没有必要的。另一方面，为了拟合完整的梯度，训练基础网络在时间和必要的硬件上都是昂贵的。</p>
+<p>用加权和将四种不同的损失组合起来。这是因为相对于回归损失，我们可能希望给分类损失更大的权重，或者相比于 RPN 可能给 R-CNN 损失更大的权重。</p>
+<p>除了常规的损失之外，我们也有正则化损失，为了简洁起见，我们可以跳过这部分，但是它们在 RPN 和 R-CNN 中都可以定义。我们用 L2 正则化一些层。根据正在使用哪个基础网络，以及如果它经过训练，也有可能进行正则化。</p>
+<p>我们用随机梯度下降的动量算法训练，将动量值设置为 0.9。你可以轻松的用其他任何优化方法训练 Faster R-CNN，而不会遇到任何大问题。</p>
+<p>学习率从 0.001 开始，然后在 50K 步后下降到 0.0001。这是通常最重要的超参数之一。当用 Luminoth 训练时，我们经常从默认值开始，并以此开始做调整。</p>
+<h1 id="评估"><a href="#评估" class="headerlink" title="评估"></a>评估</h1><p>在一些特定的 IoU 阈值下，使用标准平均精度均值（mAP）来完成评估。mAP是源于信息检索的度量标准，并且常用于计算排序问题中的误差和评估目标检测问题。</p>
+<p>我们不会深入讨论细节，因为这些类型的度量标准参见下一篇博文的详细介绍，但重要的是，当你错过了你应该检测到的框，以及当你发现一些不存在的东西或多次检测到相同的东西时，mAP 会对此进行惩罚。</p>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>到目前为止，你应该清楚 Faster R-CNN 的工作方式、设计目的以及如何针对特定的情况进行调整。如果你想更深入的了解它的工作原理，你应该看看 Luminoth 的实现。</p>
+<p>Faster R-CNN 是被证明可以用相同的原理解决复杂的计算机视觉问题的模型之一，在这个新的深度学习革命刚开始的时候，它就展现出如此惊人的结果。</p>
+<p>目前正在建立的新模型不仅用于目标检测，还用于基于这种原始模型的语义分割、3D 目标检测等等。有的借用 RPN，有的借用 R-CNN，还有的建立在两者之上。因此，充分了解底层架构非常重要，从而可以解决更加广泛的和复杂的问题。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/R-CNN/" rel="tag"># R-CNN</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/22/2018-07-22-deep-learning-fast-rcnn/" rel="next" title="Fast R-CNN目标检测方法介绍">
+                <i class="fa fa-chevron-left"></i> Fast R-CNN目标检测方法介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/04/2018-08-04-deep-learning-accuracy-precision-recall/" rel="prev" title="深度学习模型的评估指标mAP，precision和recall详解">
+                深度学习模型的评估指标mAP，precision和recall详解 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.gif"
+               alt="yuchenghui" />
+          <p class="site-author-name" itemprop="name">yuchenghui</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">39</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#框架"><span class="nav-number">2.</span> <span class="nav-text">框架</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基础网络组成"><span class="nav-number">3.</span> <span class="nav-text">基础网络组成</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#VGG"><span class="nav-number">3.1.</span> <span class="nav-text">VGG</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VGG-vs-ResNet"><span class="nav-number">3.2.</span> <span class="nav-text">VGG vs ResNet</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Anchors"><span class="nav-number">4.</span> <span class="nav-text">Anchors</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Region-Proposal-Network（RPN）"><span class="nav-number">5.</span> <span class="nav-text">Region Proposal Network（RPN）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#训练、目标和损失函数"><span class="nav-number">5.1.</span> <span class="nav-text">训练、目标和损失函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后处理"><span class="nav-number">5.2.</span> <span class="nav-text">后处理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#非极大抑制-Non-maximum-suppression"><span class="nav-number">5.2.1.</span> <span class="nav-text">非极大抑制(Non-maximum suppression)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#建议选择-Proposal-selection"><span class="nav-number">5.2.2.</span> <span class="nav-text">建议选择(Proposal selection)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#独立应用程序"><span class="nav-number">5.3.</span> <span class="nav-text">独立应用程序</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#兴趣区域池化（RoI-pooling）"><span class="nav-number">6.</span> <span class="nav-text">兴趣区域池化（RoI pooling）</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#基于region-proposal的卷积神经网络-R-CNN"><span class="nav-number">7.</span> <span class="nav-text">基于region proposal的卷积神经网络(R-CNN)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#训练和目标"><span class="nav-number">7.1.</span> <span class="nav-text">训练和目标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#后处理-1"><span class="nav-number">7.2.</span> <span class="nav-text">后处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#训练"><span class="nav-number">8.</span> <span class="nav-text">训练</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#评估"><span class="nav-number">9.</span> <span class="nav-text">评估</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结论"><span class="nav-number">10.</span> <span class="nav-text">结论</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">yuchenghui</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+  
+  
+
+  
+  
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+          processEscapes: true,
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+        }
+      });
+    </script>
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for (i=0; i < all.length; i += 1) {
+          all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+      });
+    </script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  
+
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
